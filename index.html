@@ -254,10 +254,46 @@ kernel space cannot read or
   <div class="post-wrapper">
   <div class="post-wrap-left" data-aos="fade-up">
     
-      <a class="post-link" href="/2023/08/22/ret2csu/" aria-label="ret2csu"></a>
+      <a class="post-link" href="/2023/10/13/fsop-stdout/" aria-label="FSOP stdout"></a>
     
     
     <div class="post-cover-left">
+      
+        <img data-src="https://hackmd.io/_uploads/SJ3ApaLZp.png" data-sizes="auto" alt="FSOP stdout" class="lazyload">
+      
+    </div>
+    <div class="post-info">
+      <div class="post-meta">
+        <span><span class="icon-calendar"></span>2023-10-13</span>
+        <span><span class="icon-pencil"></span>2.7k words</span>
+        <span><span class="icon-clock"></span>16 mins</span>
+      </div>
+      <h2 class="post-title">FSOP stdout</h2>
+      <article class="post-article">
+        
+          FSOP stdoutFSOP stdout
+Analysis1. fclose
+fclose() → __IO_new_fclose
+1#define fclose(fp) _IO_new_fclose (fp)
+
+
+src (glibc-2.31)
+  123456789101112131415161718192021222324252627282930313233343536373839404142434445int_IO_new_fclose (FILE *fp)&amp;#123;  int status;  CHECK_FILE(fp, EOF);#if SHLIB_COMPAT (lib
+        
+      </article>
+    </div>
+  </div>
+  </div>
+
+
+  
+  
+  <div class="post-wrapper">
+  <div class="post-wrap-right" data-aos="fade-up">
+    
+    <a class="post-link" href="/2023/08/22/ret2csu/" aria-label="ret2csu"></a>
+    
+    <div class="post-cover-right">
       
         <img data-src="https://hackmd.io/_uploads/rJYR97M6h.png" data-sizes="auto" alt="ret2csu" class="lazyload">
       
@@ -283,11 +319,12 @@ Tổng quátKhi chạy chương trình, khô
   
   
   <div class="post-wrapper">
-  <div class="post-wrap-right" data-aos="fade-up">
+  <div class="post-wrap-left" data-aos="fade-up">
     
-    <a class="post-link" href="/2023/07/04/toctou/" aria-label="TOCTOU attack"></a>
+      <a class="post-link" href="/2023/07/04/toctou/" aria-label="TOCTOU attack"></a>
     
-    <div class="post-cover-right">
+    
+    <div class="post-cover-left">
       
         <img data-src="https://hackmd.io/_uploads/SJ2MA8ZY3.png" data-sizes="auto" alt="TOCTOU attack" class="lazyload">
       
@@ -313,12 +350,11 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
   
   
   <div class="post-wrapper">
-  <div class="post-wrap-left" data-aos="fade-up">
+  <div class="post-wrap-right" data-aos="fade-up">
     
-      <a class="post-link" href="/2023/05/12/rand-vuln/" aria-label="rand() vulnerability"></a>
+    <a class="post-link" href="/2023/05/12/rand-vuln/" aria-label="rand() vulnerability"></a>
     
-    
-    <div class="post-cover-left">
+    <div class="post-cover-right">
       
         <img data-src="https://hackmd.io/_uploads/SyB-yEs43.png" data-sizes="auto" alt="rand() vulnerability" class="lazyload">
       
@@ -344,11 +380,12 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
   
   
   <div class="post-wrapper">
-  <div class="post-wrap-right" data-aos="fade-up">
+  <div class="post-wrap-left" data-aos="fade-up">
     
-    <a class="post-link" href="/2023/04/28/bruteforce-canary/" aria-label="Bruteforce Stack Canary x86-64 Linux"></a>
+      <a class="post-link" href="/2023/04/28/bruteforce-canary/" aria-label="Bruteforce Stack Canary x86-64 Linux"></a>
     
-    <div class="post-cover-right">
+    
+    <div class="post-cover-left">
       
         <img data-src="https://i.imgur.com/PY2GOVB.png" data-sizes="auto" alt="Bruteforce Stack Canary x86-64 Linux" class="lazyload">
       
@@ -373,12 +410,11 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
   
   
   <div class="post-wrapper">
-  <div class="post-wrap-left" data-aos="fade-up">
+  <div class="post-wrap-right" data-aos="fade-up">
     
-      <a class="post-link" href="/2023/04/07/stack-canary/" aria-label="Stack canary - Một cơ chế ngăn chặn Buffer Overflow"></a>
+    <a class="post-link" href="/2023/04/07/stack-canary/" aria-label="Stack canary - Một cơ chế ngăn chặn Buffer Overflow"></a>
     
-    
-    <div class="post-cover-left">
+    <div class="post-cover-right">
       
         <img data-src="https://i.imgur.com/l3HfbnG.png" data-sizes="auto" alt="Stack canary - Một cơ chế ngăn chặn Buffer Overflow" class="lazyload">
       
@@ -418,7 +454,7 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>Posts</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
   <div class="sidebar-state-category">
     <div>Categories</div>
@@ -426,7 +462,7 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
   </div>
   <div class="sidebar-state-tag">
     <div>Tags</div>
-    <div class="sidebar-state-number">5</div>
+    <div class="sidebar-state-number">6</div>
   </div>
 </div>
 <div class="sidebar-social">
@@ -497,10 +533,10 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
     
       <div>
         <span class="icon-brush"></span>
-        10.6k
+        13.3k
         &nbsp;|&nbsp;
         <span class="icon-coffee"></span>
-        01:03
+        01:19
       </div>
     
     
@@ -534,7 +570,7 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
 <div class="sidebar-state">
   <div class="sidebar-state-article">
     <div>Posts</div>
-    <div class="sidebar-state-number">7</div>
+    <div class="sidebar-state-number">8</div>
   </div>
   <div class="sidebar-state-category">
     <div>Categories</div>
@@ -542,7 +578,7 @@ Giới thiệuRace condition là một lỗi xảy ra khi thực hiện một lo
   </div>
   <div class="sidebar-state-tag">
     <div>Tags</div>
-    <div class="sidebar-state-number">5</div>
+    <div class="sidebar-state-number">6</div>
   </div>
 </div>
 <div class="sidebar-social">
